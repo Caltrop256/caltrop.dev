@@ -1,0 +1,10 @@
+<footer>
+    <ul class="hlist">
+        <li><a href="/meta/copyleft/">Reproducing</a></li>
+        <li><a href="/meta/privacy/">Privacy Policy</a></li>
+    </ul>
+    <span>
+        <svg alt="copyleft-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 980"><circle cx="490" cy="490" r="440" fill="none" stroke="#e2e2e2" stroke-width="100"/><path fill="#e2e2e2" d="M219,428H350a150,150 0 1 1 0,125H219a275,275 0 1 0 0-125z"/></svg> 
+        Copyleft 2021 - All Rites Reversed
+    </span>
+</footer>

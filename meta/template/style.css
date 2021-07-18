@@ -1,0 +1,258 @@
+::-webkit-search-decoration,
+::-webkit-search-cancel-button,
+::-webkit-search-results-button,
+::-webkit-search-results-decoration,
+::-ms-clear {
+    display: none;
+}
+
+html,
+body {
+    margin: 0;
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+
+body {
+    background-image: url("/meta/css/bg/");
+    background-position: top left;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: #000000;
+}
+
+a {
+    text-decoration: inherit;
+    color: #009CD6;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.err {
+    border-bottom: 2px dotted red;
+    display: inline-block;
+    position: relative;
+}
+
+.err:after {
+    content: '';
+    width: 100%;
+    border-bottom: 2px dotted red;
+    position: absolute;
+    font-size: 16px;
+    top: 13px;
+    /* Must be font-size minus one (14px - 1px) */
+    left: -2px;
+    display: block;
+    height: 4px;
+}
+
+.hlist {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.hlist>li:not(:last-child)::after {
+    content: " | ";
+}
+
+.hlist>li {
+    display: inline-block;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+}
+
+table {
+    height: 100%;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+header {
+    color: #e2e2e2;
+    display: flex;
+    justify-content: space-evenly;
+    min-width: 550px;
+    width: 700px;
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 12px;
+    font-size: 12px;
+}
+
+header>nav {
+    font-size: 11px;
+    padding-left: 30px;
+    padding-right: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+header .hlist {
+    margin-top: 4px;
+    margin-left: 8px;
+    margin-right: 12px;
+}
+
+header .search-form {
+    white-space: nowrap;
+}
+
+header .search-form input {
+    max-width: 250px;
+    height: 18px;
+    width: 250px;
+    font-family: "courier-std", courier, monospace;
+    font-size: 12px;
+    background-color: transparent;
+    border: 1px solid #009CD6;
+    color: #e2e2e2;
+}
+
+header .search-form input:focus {
+    outline: none;
+}
+
+article {
+    font-family: "courier-std", courier, monospace;
+    width: 75ch;
+    padding: 1ch 5ch;
+    margin: 26px auto;
+    background-color: #00000080;
+    border-left: 1px solid #3b3333;
+    border-right: 1px solid #3b3333;
+}
+
+article>h1,
+article>h3 {
+    display: block;
+    font-weight: bold;
+    line-height: 1.15;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: -8px;
+}
+
+article>h1 {
+    color: #B55AB5;
+    font-size: 32px;
+}
+
+article>h3 {
+    color: #C6A5D6;
+    font-size: 24px;
+}
+
+article p,
+article span {
+    font-size: 14px;
+    font-weight: bold;
+    color: #e2e2e2;
+}
+
+article input {
+    display: block;
+    height: 32px;
+    width: 65ch;
+    font-family: "courier-std", courier, monospace;
+    font-size: 18px;
+    background-color: transparent;
+    border: 1px solid #C6A5D6;
+    color: #e2e2e2;
+    padding-left: 4px;
+}
+
+article input:focus {
+    outline: none;
+}
+
+.correction {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.ascii-art {
+    font-family: monospace;
+    white-space: pre;
+    color: white;
+    font-size: (1vw);
+    line-height: 60%;
+    user-select: none;
+}
+
+.directory-tree {
+    list-style: none;
+    line-height: 2em;
+}
+
+.directory-tree li {
+    font-size: 16px;
+    position: relative;
+}
+
+.directory-tree li:before {
+    position: absolute;
+    left: -15px;
+    top: 0px;
+    content: "";
+    display: block;
+    border-left: 1px solid #009CD6;
+    height: 1em;
+    border-bottom: 1px solid #009CD6;
+    width: 10px;
+}
+
+.directory-tree li:after {
+    position: absolute;
+    left: -15px;
+    bottom: -7px;
+    content: "";
+    display: block;
+    border-left: 1px solid #009CD6;
+    height: 100%;
+}
+
+.directory-tree li.root {
+    margin-left: -4ch;
+}
+
+.directory-tree li.root:before,
+.directory-tree li.root:after {
+    display: none;
+}
+
+.directory-tree li:last-child:after {
+    display: none;
+}
+
+
+footer {
+    color: #e2e2e2;
+    background-color: #00000080;
+    margin-top: 25px;
+    width: 335px;
+    margin: 0 auto;
+    text-align: center;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 17px;
+}
+
+footer li {
+    font-size: 14px;
+}
+
+footer>span>svg {
+    stroke: #e2e2e2;
+    position: relative;
+    width: 15px;
+    height: 15px;
+    top: 2px;
+    margin-right: -2px;
+}

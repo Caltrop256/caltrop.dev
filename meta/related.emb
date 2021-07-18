@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em $(metadata({
+        og: {
+            title: 'Related Entries',
+            description: 'Could not resolve Path, showing related entries!',
+            url: 'https://caltrop.dev/meta/related/'
+        }
+    })); ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Could not resolve path!</h1>
+
+                <p>
+                    <?em 
+                        for(let i = 0; i < $.inp.fullPath.length; ++i) {
+                            if($.inp.failedAt == i) $('/<span class="err">', $.inp.fullPath[i], '</span>');
+                            else $('/', $.inp.fullPath[i]);
+                        };
+                    ?>
+                </p>
+                <h3>Found <?em $($.inp.matches.length); ?> possible correction<?em if($.inp.matches.length != 1) $('s'); ?></h3>
+                
+                <?em 
+                    const matches = $.inp.matches.sort((b,a) => a - b);
+                    const out = [];
+                    for(let i = 0; i < matches.length; ++i) {
+                        out[i] = ['', ''];
+                        for(let j = 0; j < $.inp.fullPath.length; ++j) {
+                            if(j == $.inp.failedAt) {
+                                out[i][0] += '/' + matches[i].name;
+                                out[i][1] += '/<span class="correction">' + matches[i].name + '</span>';
+                            } else {
+                                out[i][0] += '/' + $.inp.fullPath[j];
+                                out[i][1] += '/' + $.inp.fullPath[j];
+                            }
+                        }
+                    }
+                    for(let i = 0; i < out.length; ++i) {
+                        $('<p><a href="', out[i][0], '/">', out[i][1], '/</a></p>');
+                    }
+                ?>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

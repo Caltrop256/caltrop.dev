@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        const code = $.inp.code;
+        const status = require('http').STATUS_CODES[code];
+        $(metadata({
+        og: {
+            title: `${code} - ${status}`,
+            description: 'Could not resolve Path, showing related entries!',
+            url: 'https://caltrop.dev/meta/error/'
+        }
+    })); ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1><?em $(code); ?></h1>
+                <h3><?em $(status); ?></h3>
+                <section class="ascii-art" id="out"></section>
+                <script src="/meta/cube.js"></script>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

@@ -1,0 +1,50 @@
+<?HEAD
+    cache true
+?>
+
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        $(metadata({
+            og: {
+                title: 'Copyleft Notice',
+                description: 'Terms and Conditions for Reproducing and Reusing the works provided on this page!',
+                url: 'https://caltrop.dev/meta/copyleft/'
+            }
+        })); 
+    ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Copyleft Notice</h1>
+                <section>
+                    <p>
+                        All information provided through this webpage is free; you can redistribute it and/or modify it
+                        under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0.txt">GNU General Public License</a> as published by
+                        the Free Software Foundation; either version 3 of the License, or
+                        (at your option) any later version.
+                    </p>
+                    <p>
+                        This work is distributed in the hope that it will be useful,
+                        but WITHOUT ANY WARRANTY; without even the implied warranty of
+                        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                        GNU General Public License for more details.
+                    </p>
+                    <p>
+                        You should have received a copy of the GNU General Public License
+                        along with this work; if not, write to the Free Software
+                        Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+                    </p>
+                </section>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

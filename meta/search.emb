@@ -1,0 +1,77 @@
+<?em
+    const NodeURL = require('url');
+    const QueryString = require('querystring');
+    const utils = require('../utils.js');
+
+    const items = [];
+    const minScore = 3;
+    const query = QueryString.decode(NodeURL.parse(req.url).query).q;
+
+    if(query) {
+        const exploreTree = (folder, details) => {
+            folder.files.forEach(f => {
+                const filepath = details.path + f.name;
+                const score = Math.max(utils.rankMatch(query, filepath), utils.rankMatch(query, f.name));
+                if(score >= minScore && !f.name.endsWith('.min.js')) items.push({path: filepath, score});
+            });
+            folder.sub.forEach((dir, name) => {
+                const dirpath = details.path + name;
+                const score = Math.max(utils.rankMatch(query, dirpath), utils.rankMatch(query, name));
+                if(score >= minScore && !dir.settings.defaultUnavailable) items.push({path: dirpath, score});
+                exploreTree(dir, {
+                    path: dirpath + '/',
+                    domain: details.domain
+                })
+            });
+        };
+    
+        const domains = Array.from(global.server.domains);
+        for(let i = 0; i < domains.length; ++i) {
+            exploreTree(domains[i][1].access, {path: '/', domain: domains[i][0]});
+        }
+    };
+?>
+
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        $(metadata({
+        og: {
+            title: query ? 'Search Results' : 'Search',
+            description: query
+                ? (items.length
+                    ? `${items.length} items found!`
+                    : 'No Results (・_・ヾ'
+                )
+                : 'Search caltrop.dev!',
+            url: 'https://caltrop.dev/meta/search/'
+        }
+    })); ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Search <?em if(query) $('Results'); ?></h1>
+                <form action="/meta/search/" method="GET" class="search-form">
+                    <input type="search" name="q" minlength="1" maxlength="256" placeholder="Search Files!" autocomplete="off" value="<?em if(query) $(query) ?>">
+                </form>
+                <?em 
+                    if(!query) $('<p>Enter your Search Query above!</p>')
+                    else if(!items.length) $('<p>No Results (・_・ヾ</p>');
+                    else {
+                        items.sort((a,b) => b.score - a.score).forEach(entry => {
+                            $('<p style="font-size: ', (entry.score | 0) + 8, 'px"><a href="', entry.path, '">', entry.path, '</a></p>')
+                        });
+                    }
+                ?>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

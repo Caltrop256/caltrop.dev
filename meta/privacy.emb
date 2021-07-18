@@ -1,0 +1,35 @@
+<?HEAD
+    cache true
+?>
+
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        $(metadata({
+            og: {
+                title: 'Privacy Policy',
+                description: '',
+                url: 'https://caltrop.dev/meta/map/'
+            }
+        })); 
+    ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Privacy Policy (and other boring legal stuff)</h1>
+                <p><b>TL;DR : </b><i>Some information — such as your Internet Protocol (IP) address and browser and device characteristics — 
+                    is collected automatically when you visit our site for maintenance and telemetry use. You can opt-out with the DNT Browser Header!</i>
+                </p>
+                <h3>ill write the rest of this later its really boring</h3>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

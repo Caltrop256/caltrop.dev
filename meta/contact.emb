@@ -1,0 +1,32 @@
+<?HEAD
+    cache true
+?>
+
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        $(metadata({
+            og: {
+                title: 'Contact Information',
+                description: 'My socials and stuff',
+                url: 'https://caltrop.dev/meta/contact/'
+            }
+        })); 
+    ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Contact Information</h1>
+                <p>You can't find me,,,,;</p>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>

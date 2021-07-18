@@ -1,0 +1,15 @@
+{
+    "port": 1337,
+
+    "mysql": {
+        "host": "localhost",
+        "user": "",
+        "password": "",
+        "database": "",
+        "connectionLimit": 8
+    },
+
+    "REPL": {
+        "password": ""
+    }
+}

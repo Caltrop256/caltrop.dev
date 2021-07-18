@@ -1,0 +1,119 @@
+<?HEAD
+    Content-Type text/javascript
+    cache true
+?>
+
+class WebSocketClient {
+    promises = new Map();
+    ready = false;
+    listeners = Object.create(null);
+
+    worker = new Worker(URL.createObjectURL(new Blob(['(' + function() {
+        let socket = null;
+        let pingInterval = null;
+
+        const message = (intent, data) => postMessage(JSON.stringify({intent, data}));
+        const send = (opcode, endpoint = null, payload = null) => socket.send(JSON.stringify({
+            op: opcode,
+            e: endpoint,
+            d: payload,
+            t: Date.now()
+        }));
+        const kill = () => {
+            message('status', 0);
+            if(pingInterval) clearInterval(pingInterval);
+            if(socket) socket.close();
+        }
+
+        onmessage = e => {
+            const info = JSON.parse(e.data);
+            switch(info.intent) {
+                case 'init' :
+                    socket = new WebSocket('ws://localhost:<?em $(require('../../config.json').port) ?>/');
+                    socket.onclose = kill;
+                    socket.onerror = kill;
+                    const handshake = e => {
+                        socket.removeEventListener('message', handshake);
+                        const data = JSON.parse(e.data);
+                        pingInterval = setInterval(() => send('ping'), data.d.heartbeat);
+                        socket.addEventListener('message', e => {
+                            message('received', JSON.parse(e.data));
+                        });
+                        send('ack', info.data.handler, info.data.handshakeData);
+                        message('status', 1);
+                    };
+                    socket.addEventListener('message', handshake);
+                    break;
+                case 'send' :
+                    socket.send(JSON.stringify(info.data));
+                    break;
+            }
+        };
+
+    }.toString() + ')();'], {type: 'text/javascript'})));
+
+    constructor(handler, handshakeData) {
+        this.worker.addEventListener('message', e => {
+            const info = JSON.parse(e.data);
+            switch(info.intent) {
+                case 'received' :
+                    switch(info.data.op) {
+                        case 'event' :
+                            this.emit(info.data.ev, info.data.d);
+                            break;
+                        case 'response' :
+                            const promise = this.promises.get(info.data.ev);
+                            if(promise) promise.resolve(info.data.d);
+                            break;
+                    }
+                    break;
+                case 'status' :
+                    if(!this.ready && info.data) {
+                        this.ready = true;
+                        this.emit('ready');
+                    } else if(this.ready && !info.data) {
+                        this.emit('close');
+                    }
+                    break;
+            }
+        });
+        this.worker.postMessage(JSON.stringify({
+            intent: 'init',
+            data: {handler, handshakeData}
+        }))
+    }
+
+    on(name, callback) {
+        if(!(name in this.listeners)) this.listeners[name] = [];
+        this.listeners[name].push(callback);
+    }
+    remove(name, callback) {
+        if(!(name in this.listeners)) return;
+        for(let i = 0; i < this.listeners[name].length; ++i) {
+            if(this.listeners[name][i] == callback) {
+                this.listeners[name].splice(i, 1);
+                return;
+            }
+        }
+    }
+    emit(name, ...items) {
+        if(!(name in this.listeners)) return;
+        for(let i = 0; i < this.listeners[name].length; ++i) this.listeners[name][i].apply(this, items);
+    }
+
+    send(endpoint, payload) {
+        const now = Date.now();
+        return new Promise((resolve, reject) => {
+            this.promises.set(endpoint + now, {resolve, reject});
+            this.worker.postMessage(JSON.stringify({
+                intent: 'send',
+                data: {
+                    op: 'send',
+                    e: endpoint,
+                    d: payload,
+                    t: now
+                }
+            }))
+        });
+    }
+}

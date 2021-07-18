@@ -1,0 +1,51 @@
+<?HEAD
+    cache true
+?>
+
+<!DOCTYPE html>
+<head prefix="og: https://ogp.me/ns#">
+    <?em 
+        $(metadata({
+            og: {
+                title: 'File Map',
+                description: 'Full Directory Tree',
+                url: 'https://caltrop.dev/meta/map/'
+            }
+        })); 
+    ?>
+    <link rel="stylesheet" href="/meta/css/">
+    <link rel="shortcut icon" href="/meta/favicon.png" type="image/png">
+</head>
+<body>
+    <table>
+        <tr><td valign="top">
+            <?em $(await loadFile('meta/template/header.txt')); ?>
+            <article>
+                <h1>Directory Tree</h1>
+                <ul class="directory-tree">
+                    <li class="root"><a href="/">caltrop.dev</a></li>
+                    <?em 
+                        const traverseTree = (folder, path) => {
+                            path += '/';
+                            folder.sub.forEach((sub, name) => {
+                                if(sub.settings.defaultUnavailable) {
+                                    if(!(sub.files.size || sub.sub.size)) return;
+                                    $('<li><span style="color: #F7524A">', name, '</span>');
+                                } else $('<li><a href="', path + name, '">', name, '</a>');
+                                $('<ul class="directory-tree">');
+                                traverseTree(sub, path + name);
+                                $('</ul></li>');
+                            });
+                            folder.files.forEach(file => $('<li><a href="', path + file.name, '">', file.name, '</a></li>'))
+                        }
+                        const folder = server.domains.get(server.$defaultDomain).access;
+                        traverseTree(folder, '');
+                    ?>
+                </ul>
+            </article>
+        </td></tr>
+        <tr><td valign="bottom">
+            <?em $(await loadFile('meta/template/footer.txt')); ?>
+        </td></tr>
+    </table>
+</body>
