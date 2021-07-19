@@ -36,16 +36,44 @@ module.exports = [
     },
 
     class Chat extends Handler {
+        constructor() {
+            super();
+            this.blacklistedEndpoints.push('_sendAll');
+        }
+        _sendAll(user, content) {
+            this.sockets.forEach(s => {
+                s.sendMessage('message', {user, content});
+            });
+        }
         register(socket, handshakeData) {
             super.register(socket);
-            this.sockets.get(socket.id).username = handshakeData.username;
+            if(typeof handshakeData == 'object' && handshakeData != null && typeof handshakeData.username == 'string') {
+                const name = handshakeData.username.trim().substring(0, 16).trim().replace(/[^A-zÀ-ÖØ-öø-įĴ-őŔ-žǍ-ǰǴ-ǵǸ-țȞ-ȟȤ-ȳɃɆ-ɏḀ-ẞƀ-ƓƗ-ƚƝ-ơƤ-ƥƫ-ưƲ-ƶẠ-ỿ0-9-_ ]/g, '?');
+                if(!name) socket.terminate();
+                else {
+                    this.sockets.get(socket.id).username = name;
+                    this._sendAll('<system>', `"${socket.username}" has joined the chat!`)
+                };
+            } else socket.terminate();
         }
+        drop(socket) {
+            super.drop(socket);
+            this._sendAll('<system>', `"${socket.username}" has left the chat!`);
+        }
+
         createMessage(socket, data) {
-            if(typeof data == 'object' && typeof data.content == 'string') {
-                this.sockets.forEach(s => {
-                    if(s.id != socket.id) s.sendMessage('message', {user: socket.username, content: data.content});
-                });
-            }
+            if(typeof data == 'object' && data != null && typeof data.content == 'string') {
+            const content = data.content.substring(0, 57).replace(/\s+/g, ' ').trim();
+                this._sendAll(socket.username, content);
+            } else socket.terminate();
+        }
+
+        who() {
+            const arr = [];
+            this.sockets.forEach(s => {
+                if(s.username) arr.push(s.username);
+            });
+            return arr;
         }
     }
 ]

@@ -45,7 +45,6 @@
     };
 
     const potentialLinkPress = e => {
-        console.log(e);
         const newTabClick = e.type == 'click' || e.type == 'touchstart';
         if(newTabClick || (e.type == 'auxclick' && e.which == 2)) {
             let link = e.target;

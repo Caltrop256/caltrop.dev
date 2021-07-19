@@ -261,3 +261,19 @@ footer>span>svg {
     top: 2px;
     margin-right: -2px;
 }
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #C6A5D6;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #B55AB5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B55AB5;
+}
