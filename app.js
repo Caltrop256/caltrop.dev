@@ -22,7 +22,7 @@ stdin.addListener('data', s => {
     }
 });
 
-process.on('uncaughtException', err => {
+process.on('uncaughtException', (err) => {
     log(log.error, 'Critical Unhandled Exception!: ', err);
     setTimeout(() => process.exit(1), 150);
 });

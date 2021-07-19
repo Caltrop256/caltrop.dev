@@ -52,6 +52,7 @@ a:hover {
 }
 
 .hlist {
+    display: flex;
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -242,6 +243,10 @@ footer {
     text-align: center;
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 17px;
+}
+
+footer .hlist {
+    justify-content: center;
 }
 
 footer li {

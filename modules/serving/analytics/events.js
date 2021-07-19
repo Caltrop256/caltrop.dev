@@ -45,27 +45,32 @@
     };
 
     const potentialLinkPress = e => {
-        const isMiddleClick = e.type == 'auxclick' && e.which == 2;
-        const isClick = e.type == 'click';
-        let link = e.target;
-        while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) link = link.parentNode;
-        if(link && link.href && (isMiddleClick || isClick)) {
-            const isOutbound = link.host && link.host != l.host;
-            const willOpenInNewTab = !((!link.target || /^_(self|parent|top)$/i.test(link.target)) && (!(e.ctrlKey || e.metaKey || e.shiftKey) && isClick));
-            ev('link', {
-                outbound: isOutbound,
-                target: link.href,
-                newTab: willOpenInNewTab
-            });
-            if(!willOpenInNewTab) {
-                e.preventDefault();
-                setTimeout(() => l.href = link.href, 150);
+        console.log(e);
+        const newTabClick = e.type == 'click' || e.type == 'touchstart';
+        if(newTabClick || (e.type == 'auxclick' && e.which == 2)) {
+            let link = e.target;
+            console.log(link);
+            while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) link = link.parentNode;
+            console.log(link);
+            if(link && link.href) {
+                const isOutbound = link.host && link.host != l.host;
+                const willOpenInNewTab = !((!link.target || /^_(self|parent|top)$/i.test(link.target)) && (!(e.ctrlKey || e.metaKey || e.shiftKey) && newTabClick));
+                ev('link', {
+                    outbound: isOutbound,
+                    target: link.href,
+                    newTab: willOpenInNewTab
+                });
+                if(!willOpenInNewTab) {
+                    e.preventDefault();
+                    setTimeout(() => l.href = link.href, 150);
+                }
             }
         }
     };
 
     d.addEventListener('click', potentialLinkPress);
     d.addEventListener('auxclick', potentialLinkPress);
+    d.addEventListener('touchstart', potentialLinkPress);
     w.addEventListener('load', () => ev('pageview', {
         width: w.innerWidth,
         headless: n.webdriver
