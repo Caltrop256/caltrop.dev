@@ -8,6 +8,7 @@ const {CronJob} = require('cron');
 const queryFactory = require('./sql.js');
 const WebSocketServer = require('./websockets/server.js');
 const wsHandlers = require('./websockets/handlers.js');
+const File = require('./serving/file');
 
 const log = require('./log.js').module(Symbol('Server'), 'cyan');
 
@@ -32,6 +33,25 @@ module.exports = class Server {
         this.embeddedJS = Server.reconstruct('./template/embeddedJavascriptManager.js');
         this.sockets = null;
         this.sql = queryFactory(config.mysql);
+
+        this.metaFiles = new Map();
+        const _metapaths = {
+            ['/meta/favicon.png']: path.resolve(this.root, 'meta/template', 'favicon.png'),
+            ['/meta/css/']: path.resolve(this.root, 'meta/template', 'style.css'),
+            ['/meta/css/bg/']: path.resolve(this.root, 'meta/template', 'bg.gif'),
+            ['/meta/css/bg/trans']: path.resolve(this.root, 'meta/template', 'bg_trans.gif'),
+            ['/meta/search/']: path.resolve(this.root, 'meta', 'search.emb'),
+            ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
+            ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),
+            ['/meta/copyleft/']: path.resolve(this.root, 'meta/copyleft.emb'),
+            ['/meta/contact/']: path.resolve(this.root, 'meta/contact.emb'),
+            ['/meta/cube.js']: path.resolve(this.root, 'meta/template/cube.js'),
+            ['/meta/analytics.js']: path.resolve(this.root, 'modules/serving/analytics/events.js'),
+            ['/meta/websocketclient.js']: path.resolve(this.root, 'modules/websockets/client.emb'),
+        }
+        for(const k in _metapaths) {
+            this.metaFiles.set(k, new File(_metapaths[k], null, 'META'));
+        }
 
         this.handleRequest = require('./handleRequest.js');
 

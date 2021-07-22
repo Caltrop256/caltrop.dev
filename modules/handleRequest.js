@@ -4,30 +4,17 @@ const Folder = require('./serving/folder');
 const utils = require('./utils.js');
 const NodeURL = require('url');
 const QueryString = require('querystring');
+const fs = require('fs/promises');
+const {createReadStream} = require('fs');
 
 const log = require('./log.js').module(Symbol('Request Handler'), 'magenta');
 
-let metaPaths = null;
-
 module.exports = function(req, res) {
-    if(!metaPaths) metaPaths = {
-        ['/meta/favicon.png']: path.resolve(this.root, 'meta/template', 'favicon.png'),
-        ['/meta/css/']: path.resolve(this.root, 'meta/template', 'style.css'),
-        ['/meta/css/bg/']: path.resolve(this.root, 'meta/template', 'bg.gif'),
-        ['/meta/css/bg/trans']: path.resolve(this.root, 'meta/template', 'bg_trans.gif'),
-        ['/meta/search/']: path.resolve(this.root, 'meta', 'search.emb'),
-        ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
-        ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),
-        ['/meta/copyleft/']: path.resolve(this.root, 'meta/copyleft.emb'),
-        ['/meta/contact/']: path.resolve(this.root, 'meta/contact.emb'),
-        ['/meta/cube.js']: path.resolve(this.root, 'meta/template/cube.js'),
-        ['/meta/analytics.js']: path.resolve(this.root, 'modules/serving/analytics/events.js'),
-        ['/meta/websocketclient.js']: path.resolve(this.root, 'modules/websockets/client.emb'),
-    }
     const headers = {
         ['Connection']: 'keep-alive',
         ['Keep-Alive']: 'timeout=5',
-        ['Server']: 'Swag-Box 9001'
+        ['Server']: 'Swag-Box 9001',
+        ['Accept-Ranges']: 'bytes'
     };
 
     const resp = (code) => {
@@ -62,8 +49,9 @@ module.exports = function(req, res) {
             case 'HEAD' :
                 isHead = true;
             case 'GET' :
-                const processAndSendData = async (filepath, extname) => {
+                const processAndSendData = async (file) => {
                     try {
+                        const {path: filepath, extension: extname} = file;
                         if(extname == '.emb') {
 
                             if(!this.embeddedJS.has(filepath)) {
@@ -81,25 +69,46 @@ module.exports = function(req, res) {
                             }).catch(() => resp(500));
                         } else {
                             headers['Content-Type'] = mime.lookup(extname) || 'application/octet-stream';
-                            this.fileCache.get(filepath).then(buffer => {
-                                switch(extname) {    
-                                    case '.html' :
-                                        const _id = !doNotTrack && this.analytics.addEntry(req, domain.name, ip);
-                                        buffer = buffer.replace('data-id="{{DATAID}}"', 'data-id="'+(doNotTrack ? 'DNT' : _id)+'"');
-                                    default :
-                                        headers['Content-Length'] = Buffer.byteLength(buffer);
-                                        res.writeHead(200, headers);
-                                        if(!isHead) res.write(buffer);
-                                        res.end();
-                                        break;
+                            if(file.stat.size > this.fileCache.fileSizeLimit || req.headers.range) {
+                                if(req.headers.range) {
+                                    const match = req.headers.range.match(/^bytes=([0-9]+)-([0-9]+)?/);
+                                    if(!match || match.length < 2) return resp(400);
+                                    const start = Number(match[1]);
+                                    if(!isFinite(start) || start >= file.stat.size) return resp(416);
+                                    const end = (match[2] | 0) || file.stat.size - 1;
+                                    if(end >= file.stat.size) return resp(416);
+                                    if(end <= start) return resp(416);
+                                    const stream = createReadStream(file.path, {start, end});
+                                    headers['Content-Range'] = `bytes ${start}-${end}/${file.stat.size}`;
+                                    headers['Content-Length'] = (end - start) + 1;
+                                    res.writeHead(206, headers);
+                                    stream.pipe(res);
+                                } else {
+                                    headers['Content-Length'] = file.stat.size;
+                                    res.writeHead(200, headers);
+                                    createReadStream(file.path).pipe(res);
                                 }
-                            }).catch(err => {
-                                if(err.code == 'ENOENT') resp(404);
-                                else {
-                                    log(log.error, 'Error while trying to read requested file! ', err);
-                                    resp(500);
-                                }
-                            });
+                            } else {
+                                this.fileCache.get(filepath).then(buffer => {
+                                    switch(extname) {    
+                                        case '.html' :
+                                            const _id = !doNotTrack && this.analytics.addEntry(req, domain.name, ip);
+                                            buffer = buffer.replace('data-id="{{DATAID}}"', 'data-id="'+(doNotTrack ? 'DNT' : _id)+'"');
+                                        default :
+                                            headers['Content-Length'] = Buffer.byteLength(buffer);
+                                            res.writeHead(200, headers);
+                                            if(!isHead) res.write(buffer);
+                                            res.end();
+                                            break;
+                                    }
+                                }).catch(err => {
+                                    if(err.code == 'ENOENT') resp(404);
+                                    else {
+                                        log(log.error, 'Error while trying to read requested file! ', err);
+                                        resp(500);
+                                    }
+                                });
+                            }
                         }
                     } catch(err) {
                         log(log.error, err);
@@ -108,9 +117,9 @@ module.exports = function(req, res) {
                 };
 
                 if(url.pathname.startsWith('/meta')) {
-                    const filepath = metaPaths[url.pathname];
-                    if(!filepath) return resp(403);
-                    return processAndSendData(filepath, path.extname(filepath));
+                    const file = this.metaFiles.get(url.pathname);
+                    if(!file) return resp(403);
+                    return processAndSendData(file);
                 };
 
                 const requestedDomain = req.headers.host.split(':')[0];
@@ -147,9 +156,7 @@ module.exports = function(req, res) {
                     }).catch(() => resp(500));
                 };
 
-                const extname = path.extname(info.file.name);
-                const resourcePath = path.resolve(info.file.bsrc ? info.folder.path : Folder.toBuildDir(info.folder.path), info.file.name);
-                processAndSendData(resourcePath, extname);
+                processAndSendData(info.file);
                 break;
             
             case 'POST' :

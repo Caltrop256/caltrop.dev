@@ -29,7 +29,11 @@ class WebSocketClient {
             const info = JSON.parse(e.data);
             switch(info.intent) {
                 case 'init' :
-                    socket = new WebSocket('ws://localhost:<?em $(require('../../config.json').port) ?>/');
+                    socket = new WebSocket('<?em 
+                        const config = require('../../config.json');
+                        $('ws'); if(config.ssl) $('s');
+                        $('://', config.websocket, ':', config.port, '/');
+                    ?>');
                     socket.onclose = kill;
                     socket.onerror = kill;
                     const handshake = e => {

@@ -95,7 +95,7 @@ module.exports = class AnalyticsManager {
                         event.id,
                         new Date(event.t),
                         event.d.width,
-                        event.d.headless
+                        Boolean(event.d.headless)
                     ]);
                     break;
                 case 'link' : 

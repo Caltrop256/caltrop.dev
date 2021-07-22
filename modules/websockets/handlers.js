@@ -58,13 +58,13 @@ module.exports = [
         }
         drop(socket) {
             super.drop(socket);
-            this._sendAll('<system>', `"${socket.username}" has left the chat!`);
+            if(socket.username) this._sendAll('<system>', `"${socket.username}" has left the chat!`);
         }
 
         createMessage(socket, data) {
             if(typeof data == 'object' && data != null && typeof data.content == 'string') {
             const content = data.content.substring(0, 57).replace(/\s+/g, ' ').trim();
-                this._sendAll(socket.username, content);
+            if(content) this._sendAll(socket.username, content);
             } else socket.terminate();
         }
 

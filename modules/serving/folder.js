@@ -68,7 +68,7 @@ module.exports = class Folder {
                                     break;
                                 }
                             default :
-                                this.files.set(items[i], new File(items[i], stats[i], true));
+                                this.files.set(items[i], new File(filepath, stats[i], true));
                                 break;
                         }
                     }
@@ -186,9 +186,10 @@ module.exports = class Folder {
                         scriptTags[i].parentNode.removeChild(scriptTags[i]);
                     }
                     root.removeWhitespace();
-                    fs.writeFile(path.resolve(buildFolderPath, file), root.toString(), {encoding: 'utf8'}).then(() => {
-                        const res = [new File(file, null, false)];
-                        res[1] = new File(srcname, null, false);
+                    const filepath = path.resolve(buildFolderPath, file)
+                    fs.writeFile(filepath, root.toString(), {encoding: 'utf8'}).then(() => {
+                        const res = [new File(filepath, null, false)];
+                        res[1] = new File(path.resolve(buildFolderPath, srcname), null, false);
                         resolve(res);
                     });
                 })
