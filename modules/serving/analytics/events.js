@@ -32,25 +32,28 @@
     };
 
     const ev = (type, data = {}) => {
-        const req = new XMLHttpRequest();
-        req.open('POST', '/api/event/', true);
-        req.setRequestHeader('Content-Type', 'application/json');
-        req.send(JSON.stringify({
+        const _data = JSON.stringify({
             n: type,
             t: t(),
             d: data,
             id,
             f: focused()
-        }));
+        })
+
+        if(!n.sendBeacon) n.sendBeacon('/api/event/', _data);
+        else {
+            const req = new XMLHttpRequest();
+            req.open('POST', '/api/event/', true);
+            req.setRequestHeader('Content-Type', 'application/json');
+            req.send(_data);
+        }
     };
 
     const potentialLinkPress = e => {
         const newTabClick = e.type == 'click' || e.type == 'touchstart';
         if(newTabClick || (e.type == 'auxclick' && e.which == 2)) {
             let link = e.target;
-            console.log(link);
             while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) link = link.parentNode;
-            console.log(link);
             if(link && link.href) {
                 const isOutbound = link.host && link.host != l.host;
                 const willOpenInNewTab = !((!link.target || /^_(self|parent|top)$/i.test(link.target)) && (!(e.ctrlKey || e.metaKey || e.shiftKey) && newTabClick));
@@ -74,6 +77,9 @@
         width: w.innerWidth,
         headless: n.webdriver
     }));
-    w.addEventListener('visibilitychange', () => focusArr.push({f: !d.hidden && d.visibilityState == 'visible', t: t() - t0}));
+    w.addEventListener('visibilitychange', () => {
+        focusArr.push({f: !d.hidden && d.visibilityState == 'visible', t: t() - t0})
+    });
     w.addEventListener('beforeunload', () => ev('pageexit'));
+    w.addEventListener('unload', () => ev('pageexit'));
 })();

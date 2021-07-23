@@ -57,6 +57,7 @@ module.exports = class Server {
 
         this.logUpdateCron = new CronJob('0 0 0 * * *', () => {
             log.$updateStreamHandle(path.resolve(this.root, 'logs', log.$filenameByDate()));
+            this.analytics.flush();
         }, null, true, null, null, false, 0);
 
         Promise.all(this.domains.map(d => d.access.$readyPromise)).then(() => {

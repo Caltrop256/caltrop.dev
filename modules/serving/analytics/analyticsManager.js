@@ -6,12 +6,13 @@ module.exports = class AnalyticsManager {
     static Entry = class AnalyticsEntry {
         $finished = false;
         constructor(id, ip, domain, req) {
+            const DNT = ip == 'DNT';
             this.startTimestamp = Date.now();
             this.id = id;
             this.ip = ip;
             this.domain = domain;
             this.location = req.url || null;
-            this.userAgent = String(req.headers['user-agent']).substring(0, 256) || null;
+            this.userAgent = DNT ? null : String(req.headers['user-agent']).substring(0, 256) || null;
             this.referer = req.headers.referrer || req.headers.referer || null;
             this.method = req.method;
             this.sessionLength = null;
@@ -68,7 +69,10 @@ module.exports = class AnalyticsManager {
     addEntry(req, domain, ip) {
         const id = crypto.randomBytes(32).toString('base64');
         this.entries.set(id, new AnalyticsManager.Entry(id, ip, domain, req));
-        return id;
+        if(ip == 'DNT') {
+            this.freeEntry(id);
+            return 'DNT';
+        } else return id;
     }
 
     freeEntry(id) {
@@ -76,44 +80,48 @@ module.exports = class AnalyticsManager {
         if(!id) return null;
         this.entries.delete(id);
         const sql = server.sql('meta');
-        sql('INSERT INTO `analytics` (`id`, `timestamp`, `ip`, `domain`, `location`, `userAgent`, `referer`, `method`, `sessionLength`) VALUES (?,?,?,?,?,?,?,?,?)', [
-            entry.id,
-            new Date(entry.startTimestamp),
-            entry.ip,
-            entry.domain,
-            entry.location,
-            entry.userAgent,
-            entry.referer,
-            entry.method,
-            entry.sessionLength
-        ]);
+        sql.insert('analytics', {
+            id: entry.id,
+            timestamp: new Date(entry.startTimestamp),
+            ip: entry.ip,
+            domain: entry.domain,
+            location: entry.location,
+            userAgent: entry.userAgent,
+            referer: entry.referer,
+            method: entry.method,
+            sessionLength: entry.sessionLength
+        });
+        if(entry.ip == 'DNT') entry.events.length = 0;
         for(let i = 0; i < entry.events.length; ++i) {
             const event = entry.events[i];
             switch(event.n) {
                 case 'pageview' :
-                    sql('INSERT INTO `analytics.event.pageview` (`id`, `timestamp`, `width`, `headless`) VALUES (?,?,?,?);', [
-                        event.id,
-                        new Date(event.t),
-                        event.d.width,
-                        Boolean(event.d.headless)
-                    ]);
-                    break;
+                    return sql.insert('analytics.event.pageview', {
+                        id: event.id,
+                        timestamp: new Date(event.t),
+                        width: event.d.width,
+                        headless: Boolean(event.d.headless)
+                    });
                 case 'link' : 
-                    sql('INSERT INTO `analytics.event.link` (`id`, `timestamp`, `outbound`, `target`, `newTab`) VALUES (?,?,?,?,?);', [
-                        event.id,
-                        new Date(event.t),
-                        event.d.outbound,
-                        event.d.target,
-                        event.d.newTab
-                    ]);
-                    break;
+                    return sql.insert('analytics.event.link', {
+                        id: event.id,
+                        timestamp: new Date(event.t),
+                        outbound: event.d.outbound,
+                        target: event.d.target,
+                        newTab: event.d.newTab
+                    })
                 case 'pageexit' :
-                    sql('INSERT INTO `analytics.event.pageexit` (`id`, `timestamp`) VALUES (?,?);', [
-                        event.id,
-                        new Date(event.t)
-                    ]);
-                    break;
+                    return sql.insert('analytics.event.pageexit', {
+                        id: event.id,
+                        timestamp: new Date(event.t)
+                    })
             }
+        }
+    }
+
+    flush() {
+        for(const key of this.entries.keys()) {
+            this.freeEntry(key);
         }
     }
 }

@@ -44,3 +44,5 @@ SELECT * FROM `analytics.event.pageexit`;
 SELECT * FROM `analytics`
 LEFT JOIN `analytics.event.pageview` ON `analytics`.id = `analytics.event.pageview`.id
 LEFT JOIN `analytics.event.pageexit` ON `analytics`.id = `analytics.event.pageexit`.id;
+
+SELECT * FROM `analytics`  ORDER BY `timestamp`;
