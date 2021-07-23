@@ -40,7 +40,7 @@ module.exports = class Server {
             ['/meta/css/']: path.resolve(this.root, 'meta/template', 'style.css'),
             ['/meta/css/bg/']: path.resolve(this.root, 'meta/template', 'bg.gif'),
             ['/meta/css/bg/trans']: path.resolve(this.root, 'meta/template', 'bg_trans.gif'),
-            ['/meta/trans']: path.resolve(this.root, 'meta/trans.txt'),
+            ['/meta/trans']: path.resolve(this.root, 'meta/transMethod.emb'),
             ['/meta/search/']: path.resolve(this.root, 'meta', 'search.emb'),
             ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
             ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),

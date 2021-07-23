@@ -1,0 +1,21 @@
+<?em
+    const terminalAgents = /^(wget|curl)/i;
+    if(req.headers['user-agent'] && !terminalAgents.test(req.headers['user-agent'])) {
+        $(`<body style="background-image: linear-gradient(
+              #4fa5c2 0%,
+              #4fa5c2 20%,
+              #f587ac 20%,
+              #f587ac 40%,
+              #f9fbfc 40%,
+              #f9fbfc 60%,
+              #f587ac 60%,
+              #f587ac 80%,
+              #4fa5c2 80%,
+              #4fa5c2 100%
+            );
+          }
+          "></body>`)
+    } else {
+        $('[46m\r\n\r\n[45m\r\n\r\n[47m\r\n\r\n[45m\r\n\r\n[46m\r\n\r\n[0m\r\n');
+    }
+?>
