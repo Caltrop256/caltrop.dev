@@ -40,7 +40,7 @@
             f: focused()
         })
 
-        if(!n.sendBeacon) n.sendBeacon('/api/event/', _data);
+        if(n.sendBeacon) n.sendBeacon('/api/event/', _data);
         else {
             const req = new XMLHttpRequest();
             req.open('POST', '/api/event/', true);

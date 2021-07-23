@@ -10,7 +10,7 @@ const {createReadStream} = require('fs');
 
 const log = require('./log.js').module(Symbol('Request Handler'), 'magenta');
 
-const allowedMethods = ['HEAD', 'GET', 'POST', 'OPTIONS'];
+const allowedMethods = ['HEAD', 'GET', 'POST', 'OPTIONS', 'TRANS'];
 
 module.exports = function(req, res) {
     const headers = {

@@ -77,7 +77,7 @@ module.exports = class AnalyticsManager {
 
     freeEntry(id) {
         const entry = this.entries.get(id);
-        if(!id) return null;
+        if(!entry) return null;
         this.entries.delete(id);
         const sql = server.sql('meta');
         sql.insert('analytics', {
@@ -91,7 +91,7 @@ module.exports = class AnalyticsManager {
             method: entry.method,
             sessionLength: entry.sessionLength
         });
-        if(entry.ip == 'DNT') entry.events.length = 0;
+        if(entry.ip == 'DNT') entry.events.length = 0; // just to make sure
         for(let i = 0; i < entry.events.length; ++i) {
             const event = entry.events[i];
             switch(event.n) {
