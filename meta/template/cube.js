@@ -177,12 +177,14 @@ function loop() {
 loop();
 
 window.addEventListener('mousedown', e => {
+    e.preventDefault();
     m1down = true;
     cube.vel = new vec2();
     output.style.cursor = 'grabbing';
 });
 
 window.addEventListener('mousemove', (e) => {
+    e.preventDefault();
     if (e.buttons) {
         m1down = true;
         cube.rotate(e.movementX * 0.005, e.movementY * 0.005, cube.center);
