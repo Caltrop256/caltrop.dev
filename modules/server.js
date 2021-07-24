@@ -40,7 +40,6 @@ module.exports = class Server {
             ['/meta/css/']: path.resolve(this.root, 'meta/template', 'style.css'),
             ['/meta/css/bg/']: path.resolve(this.root, 'meta/template', 'bg.gif'),
             ['/meta/css/bg/trans']: path.resolve(this.root, 'meta/template', 'bg_trans.gif'),
-            ['/meta/trans']: path.resolve(this.root, 'meta/transMethod.emb'),
             ['/meta/search/']: path.resolve(this.root, 'meta', 'search.emb'),
             ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
             ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),
@@ -64,11 +63,14 @@ module.exports = class Server {
         Promise.all(this.domains.map(d => d.access.$readyPromise)).then(() => {
             log(log.info, 'All public files loaded!');
             this.httpServer = http.createServer((req, res) => {
-                if(this.handleRequest) this.handleRequest.call(this, req, res);
+                if(this.handleRequest) this.handleRequest.request.call(this, req, res);
                 else {
                     res.writeHead(500, {['Content-Type']: 'text/plain; charset=utf-8'});
                     res.end('head empty no thoughts (・_・ヾ');
                 }
+            });
+            this.httpServer.on('clientError', (err, socket) => {
+                if(this.handleRequest) this.handleRequest.clientError(err, socket);
             });
             this.sockets = new WebSocketServer(this.httpServer);
             for(let i = 0; i < wsHandlers.length; ++i) {

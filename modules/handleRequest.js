@@ -12,11 +12,11 @@ const log = require('./log.js').module(Symbol('Request Handler'), 'magenta');
 
 const allowedMethods = ['HEAD', 'GET', 'POST', 'OPTIONS', 'TRANS'];
 
-module.exports = function(req, res) {
+function request(req, res) {
     const headers = {
         ['Connection']: 'keep-alive',
         ['Keep-Alive']: 'timeout=5',
-        ['Server']: 'Swag-Box 9001',
+        ['Server']: 'Desiring Machine',
         ['Accept-Ranges']: 'bytes',
         ['Access-Control-Allow-Origin']: '*',
         ['Access-Control-Allow-Methods']: allowedMethods.join(', '),
@@ -75,7 +75,6 @@ module.exports = function(req, res) {
                 const processAndSendData = async file => {
 
                     const verifyRange = (range, filesize) => {
-                        log(range);
                         headers['Content-Range'] = `bytes */${filesize}`
                         if(!range || typeof range != 'string') return 400;
                         const match = range.substring('bytes='.length).match(/([0-9]+)?-([0-9]+)?/);
@@ -232,4 +231,56 @@ module.exports = function(req, res) {
         log(log.error, e);
         resp(500);
     }
+}
+
+function clientError(err, socket) {
+    if(err.code == 'ECONRESET' || !socket.writable) return;
+    const {STATUS_CODES} = http;
+    const CRLF = '\r\n';
+
+    switch (err.code) {
+        case 'HPE_INVALID_METHOD' :
+            const targetBuffer = Buffer.from('TRANS');
+            const len = Buffer.byteLength(targetBuffer);
+
+            const invalid = () => {
+                socket.end(Buffer.from(
+                    `HTTP/1.1 405 ${STATUS_CODES[405]}${CRLF}` +
+                    `Allow ${allowedMethods.join(', ')}${CRLF}` +
+                    `Connection: close${CRLF}${CRLF}`, 'ascii'
+                ));
+                socket.destroy();
+            }
+            if(Buffer.byteLength(err.rawPacket) < len) return invalid();
+            for(let i = 0; i < len; ++i) {
+                if(err.rawPacket[i] != targetBuffer[i]) return invalid();
+            }
+            socket.write('HTTP/1.1 200 OK\r\nContent-Type text/plain\r\n\r\n');
+            socket.end('[46m\r\n\r\n[45;1m\r\n\r\n[47m\r\n\r\n[45;1m\r\n\r\n[46m\r\n\r\n[0m\r\n');
+            break;
+        case 'HPE_HEADER_OVERFLOW' :
+            socket.end(Buffer.from(
+                `HTTP/1.1 431 ${STATUS_CODES[431]}${CRLF}` +
+                `Connection: close${CRLF}${CRLF}`, 'ascii'
+            ));
+            break;
+        case 'ERR_HTTP_REQUEST_TIMEOUT' :
+            socket.end(Buffer.from(
+                `HTTP/1.1 408 ${STATUS_CODES[408]}${CRLF}` +
+                `Connection: close${CRLF}${CRLF}`, 'ascii'
+            ));
+            break;
+        default :
+            socket.end(Buffer.from(
+                `HTTP/1.1 400 ${STATUS_CODES[400]}${CRLF}` +
+                `Connection: close${CRLF}${CRLF}`, 'ascii'
+            ))
+            break;
+    }
+    socket.destroy();
+}
+
+module.exports = {
+    request,
+    clientError
 }
