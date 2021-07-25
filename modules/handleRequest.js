@@ -246,7 +246,7 @@ function clientError(err, socket) {
             const invalid = () => {
                 socket.end(Buffer.from(
                     `HTTP/1.1 405 ${STATUS_CODES[405]}${CRLF}` +
-                    `Allow ${allowedMethods.join(', ')}${CRLF}` +
+                    `Allow: ${allowedMethods.join(', ')}${CRLF}` +
                     `Connection: close${CRLF}${CRLF}`, 'ascii'
                 ));
                 socket.destroy();
