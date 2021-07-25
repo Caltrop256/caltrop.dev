@@ -44,6 +44,7 @@ module.exports = class Server {
             ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
             ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),
             ['/meta/copyleft/']: path.resolve(this.root, 'meta/copyleft.emb'),
+            ['/meta/random/']: path.resolve(this.root, 'meta/random.emb'),
             ['/meta/contact/']: path.resolve(this.root, 'meta/contact.emb'),
             ['/meta/cube.js']: path.resolve(this.root, 'meta/template/cube.js'),
             ['/meta/analytics.js']: path.resolve(this.root, 'modules/serving/analytics/events.js'),

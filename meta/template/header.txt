@@ -2,7 +2,7 @@
     <nav>
         <ul class="hlist">
             <li><a href="/">Home</a></li>
-            <li><a href="/">Domains</a></li>
+            <li><a href="/meta/random/">Random</a></li>
         </ul>
         <ul class="hlist">
             <li><a href="https://www.twitter.com/caltrop256/">@Caltrop256</a></li>

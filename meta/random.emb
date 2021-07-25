@@ -1,0 +1,9 @@
+<?em
+    const paths = Array.from(server.domains.get(server.$defaultDomain).access.sub);
+    const choosenPath = paths[(Math.random() * paths.length) | 0][0];
+
+    req.client.write('HTTP/1.1 307 Temporary Redirect\r\n');
+    req.client.write('Location: /' + choosenPath + '\r\n\r\n')
+    req.client.end();
+    req.client.destroy();
+?>
