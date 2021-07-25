@@ -4,6 +4,7 @@ const path = require('path');
 const utils = require('../utils');
 const File = require('./file.js');
 const {parse, HTMLElement} = require('node-html-parser');
+const UglifyJS = require('uglify-js');
 
 const infFileName = '_info.json';
 const defaultSettings = {
@@ -171,23 +172,39 @@ module.exports = class Folder {
                 .then(buffers => {
                     const sources = buffers.map(b => b.toString('utf8'));
                     const srcname = this.path.split(path.sep).last() + '.min.js';
-                    const stream = cfs.createWriteStream(path.resolve(buildFolderPath, srcname), {encoding: 'utf8'});
                     const analyticsInsertionIndex = (Math.random() * sources.length) | 0;
+                    let inpcode = '';
                     for(let i = 0; i < sources.length; ++i) {
-                        if(i == analyticsInsertionIndex) stream.write(server.analytics.appendingScript);
+                        if(i == analyticsInsertionIndex) inpcode += server.analytics.appendingScript;
                         if(!sources[i].endsWith(';')) sources[i] += ';';
-                        stream.write(sources[i]);
+                        inpcode += sources[i];
                     };
-                    if(sources.length == 0) stream.write(server.analytics.appendingScript);
-                    stream.end();
+                    if(sources.length == 0) inpcode = server.analytics.appendingScript;
+
+                    const result = UglifyJS.minify(inpcode, {
+                        warnings: true,
+                        output: {
+                            preamble: '/* What are you looking at? */'
+                        },
+                        mangle: false,
+                        compress: false
+                    });
+                    if(result.warnings) log(log.warn, result.warnings);
+                    if(result.error) log(log.error, this.path, ' : ', result.error);
+
+                    if(!result.code) log(this.path, result);
+
+                    const writePromises = [fs.writeFile(path.resolve(buildFolderPath, srcname), result.code, {encoding: 'utf8'})];
+
                     (root.querySelector('body') || root).appendChild(new HTMLElement('script', {src: './' + srcname, ['data-id']: '{{DATAID}}'}, `src="./${srcname}" data-id="{{DATAID}}" defer`));
 
                     for(let i = 0; i < scriptTags.length; ++i) {
                         scriptTags[i].parentNode.removeChild(scriptTags[i]);
                     }
                     root.removeWhitespace();
-                    const filepath = path.resolve(buildFolderPath, file)
-                    fs.writeFile(filepath, root.toString(), {encoding: 'utf8'}).then(() => {
+                    const filepath = path.resolve(buildFolderPath, file);
+                    writePromises[1] = fs.writeFile(filepath, root.toString(), {encoding: 'utf8'});
+                    Promise.all(writePromises).then(() => {
                         const res = [new File(filepath, null, false)];
                         res[1] = new File(path.resolve(buildFolderPath, srcname), null, false);
                         resolve(res);
