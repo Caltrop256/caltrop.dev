@@ -60,6 +60,7 @@ a:hover {
 }
 
 .hlist>li:not(:last-child)::after {
+    margin-right: 4px;
     content: " | ";
 }
 

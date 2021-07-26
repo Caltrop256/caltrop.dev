@@ -4,7 +4,7 @@
     const utils = require('../utils.js');
 
     const items = [];
-    const minScore = 3;
+    const minScore = 0.7;
     const query = QueryString.decode(NodeURL.parse(req.url).query).q;
 
     if(query) {
