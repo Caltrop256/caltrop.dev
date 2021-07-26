@@ -27,7 +27,7 @@
                     <?em 
                         const traverseTree = (folder, path) => {
                             path += '/';
-                            const subFolders = Array.from(folder.sub).sort((a,b) => a[0] - b[0]);
+                            const subFolders = Array.from(folder.sub).sort((a,b) => a[0].toLowerCase() - b[0].toLowerCase());
                             for(const [name, sub] of subFolders) {
                                 if(sub.settings.defaultUnavailable) {
                                     if(!(sub.files.size || sub.sub.size)) return;
@@ -37,7 +37,7 @@
                                 traverseTree(sub, path + name);
                                 $('</ul></li>');
                             }
-                            Array.from(folder.files).sort((a,b) => a[0] - b[0]).forEach(([, file]) => $('<li><a href="', path + file.name, '">', file.name, '</a></li>'));
+                            Array.from(folder.files).sort((a,b) => a[0].toLowerCase() - b[0].toLowerCase()).forEach(([, file]) => $('<li><a href="', path + file.name, '">', file.name, '</a></li>'));
                         }
                         const folder = server.domains.get(server.$defaultDomain).access;
                         traverseTree(folder, '');
