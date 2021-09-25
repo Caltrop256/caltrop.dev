@@ -1,4 +1,6 @@
 <?em
+    const _requestedDomain = req.headers.host.split(':')[0];
+    const _domain = global.server.domains.has(_requestedDomain) ? global.server.domains.get(_requestedDomain) : global.server.domains.get(global.server.$defaultDomain);
     const NodeURL = require('url');
     const QueryString = require('querystring');
     const utils = require('../utils.js');
@@ -24,11 +26,8 @@
                 })
             });
         };
-    
-        const domains = Array.from(global.server.domains);
-        for(let i = 0; i < domains.length; ++i) {
-            exploreTree(domains[i][1].access, {path: '/', domain: domains[i][0]});
-        }
+
+        exploreTree(_domain.access, {path: '/', domain: _domain.name});
     };
 ?>
 

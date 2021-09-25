@@ -62,7 +62,6 @@ function request(req, res) {
     try {
         const doNotTrack = typeof req.headers['dnt'] != 'undefined' && req.headers['dnt'] == '1';
         const url = NodeURL.parse(req.url);
-        const query = url.query;
         const ip = doNotTrack ? 'DNT' : utils.extractIP(req);
 
         headers['Tk'] = doNotTrack ? 'N' : 'P';

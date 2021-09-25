@@ -1,5 +1,6 @@
-<?HEAD
-    cache true
+<?em
+    const _requestedDomain = req.headers.host.split(':')[0];
+    const _domain = global.server.domains.has(_requestedDomain) ? global.server.domains.get(_requestedDomain) : global.server.domains.get(global.server.$defaultDomain);
 ?>
 
 <!DOCTYPE html>
@@ -8,8 +9,8 @@
         $(metadata({
             og: {
                 title: 'Contact Information',
-                description: 'My socials and stuff',
-                url: 'https://caltrop.dev/meta/contact/'
+                description: '',
+                url: 'https://'+_domain.name+'.dev/meta/contact/'
             }
         })); 
     ?>
@@ -22,7 +23,10 @@
             <?em $(await loadFile('meta/template/header.txt')); ?>
             <article>
                 <h1>Contact Information</h1>
-                <p>You can't find me,,,,;</p>
+                <?em for(const label in _domain.info.meta.contact) {
+                        const url = _domain.info.meta.contact[label];
+                        $('<p><a href="',url,'">',label,'</a></p>');
+                    } ?>
             </article>
         </td></tr>
         <tr><td valign="bottom">

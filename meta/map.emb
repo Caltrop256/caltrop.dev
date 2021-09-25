@@ -1,5 +1,6 @@
-<?HEAD
-    cache true
+<?em
+    const _requestedDomain = req.headers.host.split(':')[0];
+    const _domain = global.server.domains.has(_requestedDomain) ? global.server.domains.get(_requestedDomain) : global.server.domains.get(global.server.$defaultDomain);
 ?>
 
 <!DOCTYPE html>
@@ -9,7 +10,7 @@
             og: {
                 title: 'File Map',
                 description: 'Full Directory Tree',
-                url: 'https://caltrop.dev/meta/map/'
+                url: 'https://'+_domain.name+'/meta/map/'
             }
         })); 
     ?>
@@ -23,7 +24,7 @@
             <article>
                 <h1>Directory Tree</h1>
                 <ul class="directory-tree">
-                    <li class="root"><a href="/">caltrop.dev</a></li>
+                    <li class="root"><a href="/"><?em $(_domain.name) ?></a></li>
                     <?em 
                         const traverseTree = (folder, path) => {
                             path += '/';
@@ -39,7 +40,7 @@
                             }
                             Array.from(folder.files).sort((a,b) => a[0].toLowerCase() - b[0].toLowerCase()).forEach(([, file]) => $('<li><a href="', path + file.name, '">', file.name, '</a></li>'));
                         }
-                        const folder = server.domains.get(server.$defaultDomain).access;
+                        const folder = _domain.access;
                         traverseTree(folder, '');
                     ?>
                 </ul>
