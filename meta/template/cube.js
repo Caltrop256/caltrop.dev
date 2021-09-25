@@ -1,4 +1,4 @@
-class vec2 {
+class Vec2 {
     constructor(x, y) {
         this.x = x || 0;
         this.y = y || 0;
@@ -15,7 +15,7 @@ class vec2 {
         return this;
     }
 }
-class vec3 {
+class Vec3 {
     constructor(x, y, z) {
         this.x = x || 0;
         this.y = y || 0;
@@ -42,7 +42,7 @@ class vec3 {
         return dx * dx + dy * dy + dz * dz;
     }
     project(d) {
-        return new vec2(this.x, this.z).mult(d / this.y);
+        return new Vec2(this.x, this.z).mult(d / this.y);
     }
 }
 class Face {
@@ -50,19 +50,22 @@ class Face {
         this.verts = verticies;
     }
     avgPos() {
-        const pos = new vec3();
+        const pos = new Vec3();
         for (let i = 0; i < this.verts.length; ++i) {
             pos.add(this.verts[i]);
         }
         pos.div(this.verts.length)
-        return pos.distance(new vec3());
+        return pos.distance(new Vec3());
     }
 }
-class Base {
-    constructor(x, y, z) {
-        this.center = new vec3(x, y, z);
-        this.size = (w * 0.012);
-        this.vel = new vec2(Math.random() * 0.15 - 0.075, Math.random() * 0.15 - 0.075);
+class Obj3D {
+    constructor(x, y, z, verticies, faces) {
+        this.center = new Vec3(x, y, z);
+        this.vel = new Vec2(Math.random() * 0.15 - 0.075, Math.random() * 0.15 - 0.075);
+        this.verticies = [];
+        this.faces = [];
+        for(let i = 0; i < verticies.length; i += 3) this.verticies.push(new Vec3(verticies[i] + x, verticies[i + 1] + y, verticies[i + 2] + z));
+        for(let i = 0; i < faces.length; ++i) this.faces.push(new Face(faces[i].map(ind => this.verticies[ind])));
     }
     update() {
         const speed = 1;
@@ -107,31 +110,6 @@ class Base {
         }
     }
 }
-class Cube extends Base {
-    constructor() {
-        super(...arguments);
-        const d = this.size * 0.5;
-        this.verticies = [
-            new vec3(this.center.x - d, this.center.y - d, this.center.z + d),
-            new vec3(this.center.x - d, this.center.y - d, this.center.z - d),
-            new vec3(this.center.x + d, this.center.y - d, this.center.z - d),
-            new vec3(this.center.x + d, this.center.y - d, this.center.z + d),
-            new vec3(this.center.x + d, this.center.y + d, this.center.z + d),
-            new vec3(this.center.x + d, this.center.y + d, this.center.z - d),
-            new vec3(this.center.x - d, this.center.y + d, this.center.z - d),
-            new vec3(this.center.x - d, this.center.y + d, this.center.z + d)
-        ];
-
-        this.faces = [
-            new Face([this.verticies[0], this.verticies[1], this.verticies[2], this.verticies[3]]),
-            new Face([this.verticies[3], this.verticies[2], this.verticies[5], this.verticies[4]]),
-            new Face([this.verticies[4], this.verticies[5], this.verticies[6], this.verticies[7]]),
-            new Face([this.verticies[7], this.verticies[6], this.verticies[1], this.verticies[0]]),
-            new Face([this.verticies[7], this.verticies[0], this.verticies[3], this.verticies[4]]),
-            new Face([this.verticies[1], this.verticies[6], this.verticies[5], this.verticies[2]])
-        ];
-    }
-}
 const canvas = document.createElement('canvas'),
     output = document.getElementById('out'),
     ctx = canvas.getContext('2d'),
@@ -143,9 +121,26 @@ const canvas = document.createElement('canvas'),
 canvas.width = w;
 canvas.height = h;
 
-const cube = new Cube(0, hh, 0);
+const d = w * 0.012 * 0.5;
+const cube = new Obj3D(0, hh, 0, [
+    -d, -d, +d,
+    -d, -d, -d,
+    +d, -d, -d,
+    +d, -d, +d,
+    +d, +d, +d,
+    +d, +d, -d,
+    -d, +d, -d,
+    -d, +d, +d
+], [
+    [0, 1, 2, 3],
+    [3, 2, 5, 4],
+    [4, 5, 6, 7],
+    [7, 6, 1, 0],
+    [7, 0, 3, 4],
+    [1, 6, 5, 2]
+]);
 let m1down = false,
-    touchlast = new vec2()
+    touchlast = new Vec2()
     distance = 2000;
 
 function toAscii() {
@@ -183,7 +178,7 @@ output.addEventListener('mousemove', prevent);
 
 window.addEventListener('mousedown', e => {
     m1down = true;
-    cube.vel = new vec2();
+    cube.vel = new Vec2();
     output.style.cursor = 'grabbing';
 });
 
@@ -191,7 +186,7 @@ window.addEventListener('mousemove', (e) => {
     if (e.buttons) {
         m1down = true;
         cube.rotate(e.movementX * 0.005, e.movementY * 0.005, cube.center);
-        cube.vel = new vec2(e.movementX * 0.02, e.movementY * 0.02);
+        cube.vel = new Vec2(e.movementX * 0.02, e.movementY * 0.02);
         output.style.cursor = 'grabbing';
     } else {
         m1down = false;
@@ -203,8 +198,8 @@ window.addEventListener('mouseup', e => {
     output.style.cursor = 'grab';
 })
 window.addEventListener('touchmove', (e) => {
-    let curTouch = new vec2(e.touches[0].clientX, e.touches[0].clientY);
-    let vel = new vec2(curTouch.x, curTouch.y).sub(touchlast).mult(0.005);
+    let curTouch = new Vec2(e.touches[0].clientX, e.touches[0].clientY);
+    let vel = new Vec2(curTouch.x, curTouch.y).sub(touchlast).mult(0.005);
     cube.rotate(vel.x, vel.y, cube.center);
     cube.vel = vel;
     touchlast = curTouch;
