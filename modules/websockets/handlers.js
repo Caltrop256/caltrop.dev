@@ -63,8 +63,8 @@ module.exports = [
 
         createMessage(socket, data) {
             if(typeof data == 'object' && data != null && typeof data.content == 'string') {
-            const content = data.content.substring(0, 57).replace(/\s+/g, ' ').trim();
-            if(content) this._sendAll(socket.username, content);
+                const content = data.content.substring(0, 57).replace(/\s+/g, ' ').trim();
+                if(content) this._sendAll(socket.username, content);
             } else socket.terminate();
         }
 
