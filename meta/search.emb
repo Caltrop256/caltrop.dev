@@ -42,8 +42,8 @@
                     ? `${items.length} items found!`
                     : 'No Results (・_・ヾ'
                 )
-                : 'Search caltrop.dev!',
-            url: 'https://caltrop.dev/meta/search/'
+                : 'Search '+_domain.name+'!',
+            url: 'https://'+_domain.name+'/meta/search/'
         }
     })); ?>
     <link rel="stylesheet" href="/meta/css/">

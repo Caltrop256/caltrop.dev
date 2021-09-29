@@ -10,7 +10,7 @@
             og: {
                 title: 'Contact Information',
                 description: '',
-                url: 'https://'+_domain.name+'.dev/meta/contact/'
+                url: 'https://'+_domain.name+'/meta/contact/'
             }
         })); 
     ?>

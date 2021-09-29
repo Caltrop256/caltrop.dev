@@ -10,7 +10,7 @@
         </ul>
         <ul class="hlist">
             <li><a href="/meta/map/">Map</a></li>
-            <li><a href="/meta/search/">Search</a></li>
+            <li><a href="/meta/analytics/">Analytics</a></li>
         </ul>
     </nav>
     <form action="/meta/search/" method="GET" class="search-form">

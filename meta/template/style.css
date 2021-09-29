@@ -171,6 +171,10 @@ article input {
     padding-left: 4px;
 }
 
+article input[type="date"] {
+    width: 12.75ch;
+}
+
 article input:focus {
     outline: none;
 }

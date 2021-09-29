@@ -1,0 +1,66 @@
+<?HEAD
+    Content-Type application/json
+?>
+<?em 
+    const NodeURL = require('url');
+
+    const formatDate = _d => _d.getFullYear() + '-' + (_d.getMonth() + 1).toString().padStart(2, '0') + '-' + _d.getDate().toString().padStart(2, '0');
+    
+    let _to = formatDate(new Date(Date.now() + 86400000));
+    let _from = '2021-07-17';
+    let _domain = 'All';
+
+    const {query} = NodeURL.parse(req.url);
+    const match = (query || '').match(/t=(\d{4,4}-\d{2,2}-\d{2,2})_(\d{4,4}-\d{2,2}-\d{2,2})/);
+    if(match && match.length == 3) {
+        _from = match[1];
+        _to = match[2];
+    }
+
+    const sql = global.server.sql('meta');
+    const [rows] = await sql(
+        'SELECT * FROM `analytics`' +
+        'LEFT JOIN `analytics.event.pageview` ON `analytics`.`id` = `analytics.event.pageview`.`id`' +
+        'LEFT JOIN `analytics.event.pageexit` ON `analytics`.`id` = `analytics.event.pageexit`.`id`' +
+        'WHERE ' +
+            '(`analytics`.`timestamp` BETWEEN "'+_from+' 00:00:00" AND "'+_to+' 23:59:59")' + 
+            (_domain != 'All' ? 'AND `domain`="'+_domain+'"' : '') +
+        'ORDER BY `analytics`.`timestamp`' +
+        'LIMIT 18446744073709551615;'
+    , [], {nestTables: true});
+
+    const days = new Map();
+    const _d_earliest = new Date(rows[0].analytics.timestamp).setHours(0, 0, 0, 0);
+    const _d_latest = new Date(rows[rows.length - 1].analytics.timestamp).setHours(0, 0, 0, 0);
+    for(let i = _d_earliest; i <= _d_latest; i += 86400000) days.set(i, 0);
+    for(const row of rows) {
+        const d = new Date(row.analytics.timestamp).setHours(0, 0, 0, 0);
+        days.set(d, days.get(d) + 1);
+    }
+
+
+    const data = {
+        days: Array.from(days)
+    };
+
+    $(JSON.stringify(data));
+
+
+    /*$(JSON.stringify(rows.map(row => {
+        const data = {
+            timestamp: new Date(row.analytics.timestamp).getTime(),
+            domain: row.analytics.domain,
+            location: row.analytics.location,
+            method: row.analytics.method,
+            doNotTrack: row.analytics.ip == 'DNT'
+        }
+        if(row.analytics.userAgent) data.userAgent = row.analytics.userAgent;
+        if(row.analytics.referer) data.referer = row.analytics.referer
+        if(!data.doNotTrack) {
+            if(row['analytics.event.pageview'].width) data.width = row['analytics.event.pageview'].width;
+            if(row['analytics.event.pageview'].headless != null) data.headless = !!row['analytics.event.pageview'].headless;
+            if(row['analytics.event.pageexit'].timestamp) data.exitAt = new Date(row['analytics.event.pageexit'].timestamp).getTime()
+        }
+        return data;
+    })));*/
+?>
