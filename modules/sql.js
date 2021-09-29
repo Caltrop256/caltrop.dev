@@ -3,7 +3,7 @@ const mysql = require('mysql');
 module.exports = function queryFactory(config) {
     const pool = mysql.createPool(Object.assign({multipleStatements: true}, config));
     return db => {
-        const query = (sql, escape) => new Promise((resolve, reject) => {
+        const query = (sql, escape, additionalOptions) => new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if(err) return reject(err);
                 con.changeUser({database: db}, err => {
@@ -14,6 +14,7 @@ module.exports = function queryFactory(config) {
                     } else {
                         const opts = {sql};
                         if(Array.isArray(escape) && escape.length) opts.values = escape;
+                        for(const key in additionalOptions) opts[key] = additionalOptions[key];
                         con.query(opts, (err, res, fields) => {
                             con.release();
                             if(err) return reject(err);

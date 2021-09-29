@@ -105,7 +105,7 @@ function request(req, res) {
                                     content.data = content.data.slice(rangeInfo.start, rangeInfo.end + 1);
                                 } else headers['Content-Length'] = Buffer.byteLength(content.data);
                                 
-                                res.writeHead(req.headers.range ? 206 : 200, headers);
+                                res.writeHead(req.headers.range ? 206 : content.code, headers);
                                 if(!isHead) res.write(content.data);
                                 res.end();
                             }).catch(() => resp(500));
@@ -151,7 +151,7 @@ function request(req, res) {
                     }
                 };
 
-                if(url.pathname.startsWith('/meta')) {
+                if(url.pathname.startsWith('/meta/') || url.pathname.startsWith('/api/')) {
                     const file = this.metaFiles.get(url.pathname);
                     if(!file) return resp(403);
                     return processAndSendData(file);
@@ -196,27 +196,31 @@ function request(req, res) {
                 break;
             
             case 'POST' :
-                if(url.pathname.startsWith('/api/event/')) {
-                    const recData = [];
-                    req.on('data', chunk => recData.push(chunk));
-                    req.on('end', () => {
-                        const buf = Buffer.concat(recData);
-                        const data = JSON.parse(buf.toString('utf8'));
-                        if(typeof data.id == 'string') {
-                            const entry = this.analytics.entries.get(data.id);
-                            if(!entry) return resp(403);
-                            if(!entry.registerEvent(data)) return resp(400);
-                            if(entry.$finished) this.analytics.freeEntry(entry.id);
-                        } else return resp(403);
-                        headers['Content-Type'] = 'text/plain';
-                        res.writeHead(204, headers);
+                const postToEmb = async file => {
+                    if(!this.embeddedJS.has(file.path)) {
+                        const scriptData = (await this.fileCache.get(file.path)).toString('utf8');
+                        if(!this.embeddedJS.register(file.path, scriptData)) return resp(500);
+                    }
+
+                    this.embeddedJS.run(file.path, req, {}).then(content => {
+                        headers['Content-Type'] = content.encoding;
+                        const respLen = Buffer.byteLength(content.data);
+                        if(req.headers.range) {
+                            const rangeInfo = verifyRange(req.headers.range, respLen);
+                            if(typeof rangeInfo == 'number') return respNoBody(rangeInfo);
+                            content.data = content.data.slice(rangeInfo.start, rangeInfo.end + 1);
+                        } else headers['Content-Length'] = respLen;
+                        
+                        res.writeHead(req.headers.range ? 206 : content.code, headers);
+                        if(respLen) res.write(content.data);
                         res.end();
-                    });
-                } else {
-                    // console.log(req);
-                    // req.on('data', chunk => console.log(chunk.toString('utf8')));
-                    return resp(404);
+                    }).catch(() => resp(500));
                 }
+                if(url.pathname.startsWith('/meta/') || url.pathname.startsWith('/api/')) {
+                    const file = this.metaFiles.get(url.pathname);
+                    if(!file || file.extension != '.emb') return resp(403);
+                    postToEmb(file);
+                } else return resp(404);
                 break;
                 
             case 'OPTIONS' :

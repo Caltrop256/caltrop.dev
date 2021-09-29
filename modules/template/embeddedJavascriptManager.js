@@ -79,7 +79,7 @@ module.exports = class EmbeddedJavascriptManager {
                     offset += echoOutput.length - length;
                 };
 
-                const out = {data, encoding: script.headers['Content-Type'] || 'text/html'}
+                const out = {data, encoding: script.headers['Content-Type'] || 'text/html', code: $.responseCode}
 
                 if(script.headers.cache == 'true') {
                     script.headers.__cachedData = out;

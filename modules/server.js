@@ -42,13 +42,18 @@ module.exports = class Server {
             ['/meta/css/bg/trans']: path.resolve(this.root, 'meta/template', 'bg_trans.gif'),
             ['/meta/search/']: path.resolve(this.root, 'meta', 'search.emb'),
             ['/meta/map/']: path.resolve(this.root, 'meta/map.emb'),
+            ['/meta/analytics/']: path.resolve(this.root, 'meta/analytics.emb'),
             ['/meta/privacy/']: path.resolve(this.root, 'meta/privacy.emb'),
             ['/meta/copyleft/']: path.resolve(this.root, 'meta/copyleft.emb'),
             ['/meta/random/']: path.resolve(this.root, 'meta/random.emb'),
             ['/meta/contact/']: path.resolve(this.root, 'meta/contact.emb'),
             ['/meta/cube.js']: path.resolve(this.root, 'meta/template/cube.js'),
             ['/meta/analytics.js']: path.resolve(this.root, 'modules/serving/analytics/events.js'),
+            ['/meta/chart.js']: path.resolve(this.root, 'meta/template/chart.js'),
             ['/meta/websocketclient.js']: path.resolve(this.root, 'modules/websockets/client.emb'),
+
+            ['/api/anal/']: path.resolve(this.root, 'meta/api/analyticsQuery.emb'),
+            ['/api/event/']: path.resolve(this.root, 'meta/api/event.emb')
         }
         for(const k in _metapaths) {
             this.metaFiles.set(k, new File(_metapaths[k], null, 'META'));

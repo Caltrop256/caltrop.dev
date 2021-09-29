@@ -5,6 +5,7 @@ module.exports = {
     tag: {
         currentId: 0
     },
+    responseCode: 200,
 
     escape(unsafe) {
         return unsafe.replace(/[&<>"']/g, t => {switch(t) {
@@ -44,6 +45,17 @@ module.exports = {
 
     async loadFile(filepath) {
         return (await server.fileCache.get(path.resolve(server.root, filepath))).toString('utf8');
+    },
+
+    getBody(req) {
+        return new Promise((resolve, reject) => {
+            const recData = [];
+            req.on('data', chunk => recData.push(chunk));
+            req.on('end', () => {
+                resolve(Buffer.concat(recData));
+            });
+            req.on('error', reject);
+        });
     },
 
     require() {

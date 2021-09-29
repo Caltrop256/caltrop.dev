@@ -1,0 +1,12 @@
+<?em
+    const buf = await getBody(req);
+    const data = JSON.parse(buf.toString('utf8'));
+
+    if(typeof data.id == 'string') {
+        const entry = global.server.analytics.entries.get(data.id);
+        if(!entry) return $.responseCode = 403;
+        if(!entry.registerEvent(data)) return $.responseCode = 400;
+        if(entry.$finished) global.server.analytics.freeEntry(entry.id);
+        $.responseCode = 204;
+    } else $.responseCode = 400;
+?>
