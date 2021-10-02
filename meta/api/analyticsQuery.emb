@@ -18,7 +18,6 @@
     }
 
     const queryData = QueryString.parse(NodeURL.parse(req.url).query || '');
-    log(queryData);
 
     function getQuery(name, regex) {
         if(typeof queryData[name] == 'string' && (!regex || regex.test(queryData[name]))) return queryData[name];
