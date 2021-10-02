@@ -62,6 +62,7 @@ function formatVar(variable) {
     switch(variable) {
         case 'os' : return 'OS';
         case 'cpu' : return 'CPU';
+        case 'uniqueVisitors' : return 'Unique* Visitors'
 
         default : 
             let humanReadable = variable.charAt(0).toUpperCase();
@@ -97,7 +98,7 @@ function render() {
             }
         }
     }
-    const pow = Math.pow(10, ((trueYMax | 0).toString().length - 1));
+    const pow = Math.pow(10, (Math.max(1, Math.ceil(trueYMax).toString().length - 1)));
 
     const yMin = 0;
     const yMax = Math.max(ySteps, Math.ceil(trueYMax / pow) * pow);

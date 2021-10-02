@@ -326,6 +326,7 @@ footer>span>svg {
 
 .graphable {
     cursor: pointer;
+    user-select: none;
 }
 
 .graphable:hover {

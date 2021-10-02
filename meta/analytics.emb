@@ -39,6 +39,7 @@
                 </div>
 
                 <div class="summedValues" id="sumValues"></div>
+                <p>* lowest reliable estimate - DNT visitors do not count towards this value!</p>
 
                 <div class="aLists" id="aLists">
 
