@@ -23,16 +23,12 @@
             <?em $(await loadFile('meta/template/header.txt')); ?>
             <article>
                 <h1>Analytics</h1>
-                <h3>Total Site Views</h3>
-                <!--
-                <select name="Domain">
-                    <?em
-                        for(const domain of global.server.domains.keys()) {
-                            $('<option value="',domain,'">',domain,'</option>');
-                        }
-                    ?>
-                </select>
-                -->
+
+                <div style="display: flex">
+                    <input style="margin-right: 2px" type="text" id="domain" value="<?em $(_domain.name) ?>" placeholder="Filter for domain">
+                    <input style="margin-left: 2px" type="text" id="path" value="" placeholder="Filter for path">
+                </div>
+
                 <script defer src="/meta/chart.js"></script>
                 <div style="display: flex; justify-content: space-between;">
                     <input id="from" type="date" value="2021-07-17">
@@ -40,6 +36,12 @@
                         const d = new Date(Date.now() + 86400000);
                         $(d.getFullYear(), '-', (d.getMonth() + 1).toString().padStart(2, '0'), '-', d.getDate().toString().padStart(2, '0'));
                     ?>">
+                </div>
+
+                <div class="summedValues" id="sumValues"></div>
+
+                <div class="aLists" id="aLists">
+
                 </div>
             </article>
         </td></tr>

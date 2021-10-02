@@ -3,64 +3,149 @@
 ?>
 <?em 
     const NodeURL = require('url');
+    const QueryString = require('querystring');
+    const uaParser = require('ua-parser-js');
+
+    class CountMap extends Map {
+        inc(key) {
+            if(this.has(key)) this.set(key, this.get(key) + 1);
+            else this.set(key, 1);
+        }
+
+        toJSON() {
+            return Array.from(this);
+        }
+    }
+
+    const queryData = QueryString.parse(NodeURL.parse(req.url).query || '');
+    log(queryData);
+
+    function getQuery(name, regex) {
+        if(typeof queryData[name] == 'string' && (!regex || regex.test(queryData[name]))) return queryData[name];
+    }
 
     const formatDate = _d => _d.getFullYear() + '-' + (_d.getMonth() + 1).toString().padStart(2, '0') + '-' + _d.getDate().toString().padStart(2, '0');
     
-    let _to = formatDate(new Date(Date.now() + 86400000));
-    let _from = '2021-07-17';
-    let _domain = 'All';
+    const _from = getQuery('from', /\d{4,4}-\d{2,2}-\d{2,2}/) || '2021-07-17';
+    const _to = getQuery('to', /\d{4,4}-\d{2,2}-\d{2,2}/) || formatDate(new Date(Date.now() + 86400000));
+    const _location = getQuery('path') || 'All';
+    const _domain = getQuery('domain') || 'All';
 
-    const {query} = NodeURL.parse(req.url);
-    const match = (query || '').match(/t=(\d{4,4}-\d{2,2}-\d{2,2})_(\d{4,4}-\d{2,2}-\d{2,2})/);
-    if(match && match.length == 3) {
-        _from = match[1];
-        _to = match[2];
-    }
+    const escape = [];
+    if(_location != 'All') escape.push(_location);
+    if(_domain != 'All') escape.push(_domain);
 
     const sql = global.server.sql('meta');
-    const [rows] = await sql(
-        'SELECT * FROM `analytics`' +
-        'LEFT JOIN `analytics.event.pageview` ON `analytics`.`id` = `analytics.event.pageview`.`id`' +
-        'LEFT JOIN `analytics.event.pageexit` ON `analytics`.`id` = `analytics.event.pageexit`.`id`' +
-        'WHERE ' +
-            '(`analytics`.`timestamp` BETWEEN "'+_from+' 00:00:00" AND "'+_to+' 23:59:59")' + 
-            (_domain != 'All' ? 'AND `domain`="'+_domain+'"' : '') +
-        'ORDER BY `analytics`.`timestamp`' +
-        'LIMIT 18446744073709551615;'
-    , [], {nestTables: true});
+    const [__reg, __link] = await Promise.all([
+        sql(
+            'SELECT * FROM `analytics`' +
+            'LEFT JOIN `analytics.event.pageview` ON `analytics`.`id` = `analytics.event.pageview`.`id`' +
+            'LEFT JOIN `analytics.event.pageexit` ON `analytics`.`id` = `analytics.event.pageexit`.`id`' +
+            'WHERE ' +
+                '(`analytics`.`timestamp` BETWEEN "'+_from+' 00:00:00" AND "'+_to+' 23:59:59")' + 
+                (_location != 'All' ? 'AND `location`=?' : '') +
+                (_domain != 'All' ? 'AND `domain`=?' : '') +
+            'ORDER BY `analytics`.`timestamp`' +
+            'LIMIT 18446744073709551615;'
+            , escape, {nestTables: true}),
+        sql(
+            'SELECT * FROM `analytics.event.link`' +
+            'LEFT JOIN `analytics` ON `analytics.event.link`.`id` = `analytics`.`id`' +
+            'WHERE ' +
+                '(`analytics.event.link`.`timestamp` BETWEEN "'+_from+' 00:00:00" AND "'+_to+' 23:59:59;")' +
+                (_location != 'All' ? 'AND `location`=?' : '') +
+                (_domain != 'All' ? 'AND `domain`=?' : '') +
+            'ORDER BY `analytics`.`timestamp`' +
+            'LIMIT 18446744073709551615;'
+            , escape, {nestTables: true})
+    ]);
+
+    const [rows] = __reg;
+    const [linkrows] = __link;
+    if(!rows.length) return $('{"days":[]}');
 
     const days = new Map();
     const _d_earliest = new Date(rows[0].analytics.timestamp).setHours(0, 0, 0, 0);
     const _d_latest = new Date(rows[rows.length - 1].analytics.timestamp).setHours(0, 0, 0, 0);
-    for(let i = _d_earliest; i <= _d_latest; i += 86400000) days.set(i, 0);
-    for(const row of rows) {
-        const d = new Date(row.analytics.timestamp).setHours(0, 0, 0, 0);
-        days.set(d, days.get(d) + 1);
+    for(let i = _d_earliest; i <= _d_latest; i += 86400000) days.set(i, {
+        visitors: 0,
+        uniqueVisitors: new CountMap(),
+        dntVisitors: 0,
+        averageSessionLength: 0,
+
+        browser: new CountMap(),
+        engine: new CountMap(),
+        os: new CountMap(),
+        device: new CountMap(),
+        cpu: new CountMap(),
+
+        width: new CountMap(),
+        
+        path: new CountMap(),
+        domain: new CountMap(),
+        referer: new CountMap(),
+        outbound: new CountMap()
+    });
+
+    const normalizeHost = host => {
+        host = host.replace(/^www./, '');
+        if(host == 'caltrop.dev') return '';
+        return host;
     }
 
+    for(const row of rows) {
+        const ua = uaParser(row.analytics.userAgent);
+        const item = days.get(new Date(row.analytics.timestamp).setHours(0, 0, 0, 0));
+        item.visitors += 1;
+        item.uniqueVisitors.inc(row.analytics.ip);
+
+        item.browser.inc(ua.browser.name || 'Unknown');
+        item.engine.inc(ua.engine.name || 'Unknown');
+        item.os.inc(ua.os.name || 'Unknown');
+        let device = ua.device.vendor || '';
+        if(ua.device.model) device += ' ' + ua.device.model;
+        item.device.inc(device.trim() || 'Unknown');
+        item.cpu.inc(ua.cpu.architecture || 'Unknown');
+
+        item.averageSessionLength += row.analytics.sessionLength;
+        item.path.inc(row.analytics.location.replace(/\/index.(html|emb)$/, '/'));
+        item.domain.inc(row.analytics.domain);
+        if(row.analytics.referer) item.referer.inc(normalizeHost(NodeURL.parse(row.analytics.referer).host || 'Invalid') || 'caltrop.dev');
+        else item.referer.inc('n/A');
+
+        const width = row['analytics.event.pageview'].width;
+
+        item.width.inc(width 
+            ? width >= 256
+                ? width >= 720
+                    ? width >= 1080
+                        ? width > 1440
+                            ? 'Above 1440px'
+                            : '1080px - 1440px'
+                        : '720px - 1019px'
+                    : '256px - 619px'
+                : 'Below 256px'
+            : 'Unknown'
+        );
+    }
+
+    for(const row of linkrows) {
+        const item = days.get(new Date(row['analytics'].timestamp).setHours(0, 0, 0, 0));
+        const url = NodeURL.parse(row['analytics.event.link'].target);
+
+        item.outbound.inc(normalizeHost(url.host) + url.path);
+    }
 
     const data = {
         days: Array.from(days)
     };
 
+    for(let i = 0; i < data.days.length; ++i) {
+        data.days[i][1].dntVisitors = data.days[i][1].uniqueVisitors.get('DNT') || 0;
+        data.days[i][1].uniqueVisitors = [...data.days[i][1].uniqueVisitors.keys()].length;
+        data.days[i][1].averageSessionLength /= data.days[i][1].visitors - data.days[i][1].dntVisitors;
+        data.days[i][1].averageSessionLength = Math.round(data.days[i][1].averageSessionLength);
+    }
+
     $(JSON.stringify(data));
-
-
-    /*$(JSON.stringify(rows.map(row => {
-        const data = {
-            timestamp: new Date(row.analytics.timestamp).getTime(),
-            domain: row.analytics.domain,
-            location: row.analytics.location,
-            method: row.analytics.method,
-            doNotTrack: row.analytics.ip == 'DNT'
-        }
-        if(row.analytics.userAgent) data.userAgent = row.analytics.userAgent;
-        if(row.analytics.referer) data.referer = row.analytics.referer
-        if(!data.doNotTrack) {
-            if(row['analytics.event.pageview'].width) data.width = row['analytics.event.pageview'].width;
-            if(row['analytics.event.pageview'].headless != null) data.headless = !!row['analytics.event.pageview'].headless;
-            if(row['analytics.event.pageexit'].timestamp) data.exitAt = new Date(row['analytics.event.pageexit'].timestamp).getTime()
-        }
-        return data;
-    })));*/
 ?>

@@ -132,8 +132,8 @@ article {
     border-right: 1px solid #3b3333;
 }
 
-article>h1,
-article>h3 {
+article h1,
+article h3 {
     display: block;
     font-weight: bold;
     line-height: 1.15;
@@ -142,12 +142,12 @@ article>h3 {
     margin-left: -8px;
 }
 
-article>h1 {
+article h1 {
     color: #B55AB5;
     font-size: 32px;
 }
 
-article>h3 {
+article h3 {
     color: #C6A5D6;
     font-size: 24px;
 }
@@ -281,4 +281,71 @@ footer>span>svg {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #B55AB5;
+}
+
+.aLists {
+    width: 100%;
+    margin: 0 auto;
+    display: flex; 
+    flex-direction: row; 
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.aLists div {
+    padding: 20px;
+}
+
+.aLists div ul {
+    list-style-type: none;
+    list-style: none;
+    padding-left: 0;
+    width: 250px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.aLists div ul li {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 6px;
+    padding-bottom: 4px;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #e2e2e2;
+    border-bottom: 2px solid #B55AB5;
+    line-height: 100%;
+}
+
+.aLists div ul li .itemName {
+    width: calc(100% - 5ch);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.graphable {
+    cursor: pointer;
+}
+
+.graphable:hover {
+    border-left: 6px solid #C6A5D6;
+}
+
+.graphable[graphed=true] {
+    border-left: 6px solid #B55AB5;
+}
+
+.graphable[graphed=true]:hover {
+    border-left: 6px solid #f7524a;
+}
+
+.summedValues {
+    padding-top: 16px;
+}
+
+.summedValues span {
+    padding: 10px;
+    border: 2px dotted #B55AB5;
+    margin-left: 8px;
 }
