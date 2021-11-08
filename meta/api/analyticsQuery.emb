@@ -95,6 +95,7 @@
     for(const row of rows) {
         const ua = uaParser(row.analytics.userAgent);
         const item = days.get(new Date(row.analytics.timestamp).setHours(0, 0, 0, 0));
+        if(!item) continue;
         item.visitors += 1;
         item.uniqueVisitors.inc(row.analytics.ip);
 
