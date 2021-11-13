@@ -30,6 +30,7 @@ module.exports = class Server {
 
         this.fileCache = Server.reconstruct('./serving/cacheFileReader.js', 25, 1);
         this.analytics = Server.reconstruct('./serving/analytics/analyticsManager.js');
+        this.fileDB = Server.reconstruct('./serving/fileDB.js', path.resolve(this.root, 'store'));
         this.embeddedJS = Server.reconstruct('./template/embeddedJavascriptManager.js');
         this.sockets = null;
         this.sql = queryFactory(config.mysql);
@@ -96,6 +97,7 @@ module.exports = class Server {
                 this.pendingDomainBuilds[i].time -= 100;
                 if(!this.rebuilding && this.pendingDomainBuilds[i].time < 0) {
                     this.embeddedJS.clearCache();
+                    this.fileCache.clear();
                     const d = new Domain(this.pendingDomainBuilds[i].name, this.root);
                     this.domains.set(this.pendingDomainBuilds[i].name, d);
                     this.rebuilding = true;

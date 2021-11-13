@@ -63,28 +63,31 @@
     const [linkrows] = __link;
     if(!rows.length) return $('{"days":[]}');
 
-    const days = new Map();
     const _d_earliest = new Date(rows[0].analytics.timestamp).setHours(0, 0, 0, 0);
     const _d_latest = new Date(rows[rows.length - 1].analytics.timestamp).setHours(0, 0, 0, 0);
-    for(let i = _d_earliest; i <= _d_latest; i += 86400000) days.set(i, {
-        visitors: 0,
-        uniqueVisitors: new CountMap(),
-        dntVisitors: 0,
-        averageSessionLength: 0,
 
-        browser: new CountMap(),
-        engine: new CountMap(),
-        os: new CountMap(),
-        device: new CountMap(),
-        cpu: new CountMap(),
+    const dayArr = new Array(Math.ceil((_d_latest - _d_earliest) / 86400000) + 1);
+    for(let i = 0; i < dayArr.length; ++i) {
+        dayArr[i] = {
+            visitors: 0,
+            uniqueVisitors: new CountMap(),
+            dntVisitors: 0,
+            averageSessionLength: 0,
 
-        width: new CountMap(),
-        
-        path: new CountMap(),
-        domain: new CountMap(),
-        referer: new CountMap(),
-        outbound: new CountMap()
-    });
+            browser: new CountMap(),
+            engine: new CountMap(),
+            os: new CountMap(),
+            device: new CountMap(),
+            cpu: new CountMap(),
+
+            width: new CountMap(),
+            
+            path: new CountMap(),
+            domain: new CountMap(),
+            referer: new CountMap(),
+            outbound: new CountMap()
+        }
+    }
 
     const normalizeHost = host => {
         host = host.replace(/^www./, '');
@@ -94,8 +97,11 @@
 
     for(const row of rows) {
         const ua = uaParser(row.analytics.userAgent);
-        const item = days.get(new Date(row.analytics.timestamp).setHours(0, 0, 0, 0));
-        if(!item) continue;
+        
+        const _day = new Date(row.analytics.timestamp).setHours(0, 0, 0, 0);
+        const ind = ((_day - _d_earliest) / 86400000) | 0;
+        const item = dayArr[ind];
+        if(!item) log(ind, ' ', dayArr.length);
         item.visitors += 1;
         item.uniqueVisitors.inc(row.analytics.ip);
 
@@ -130,14 +136,16 @@
     }
 
     for(const row of linkrows) {
-        const item = days.get(new Date(row['analytics'].timestamp).setHours(0, 0, 0, 0));
+        const _day = new Date(row['analytics'].timestamp).setHours(0, 0, 0, 0)
+        const ind = ((_day - _d_earliest) / 86400000) | 0;
+        const item = dayArr[ind];
         const url = NodeURL.parse(row['analytics.event.link'].target);
 
         item.outbound.inc(normalizeHost(url.host) + url.path);
     }
 
     const data = {
-        days: Array.from(days)
+        days: dayArr.map((n, i) => [i * 86400000 + _d_earliest, n])
     };
 
     for(let i = 0; i < data.days.length; ++i) {
@@ -146,6 +154,8 @@
         data.days[i][1].averageSessionLength /= data.days[i][1].visitors - data.days[i][1].dntVisitors;
         data.days[i][1].averageSessionLength = Math.round(data.days[i][1].averageSessionLength);
     }
+
+    //if(!data.days[data.days.length - 1][1].visitors) data.days[data.days.length - 1].pop();
 
     $(JSON.stringify(data));
 ?>

@@ -70,9 +70,9 @@
         }
     };
 
-    d.addEventListener('click', potentialLinkPress);
+    /*d.addEventListener('click', potentialLinkPress);
     d.addEventListener('auxclick', potentialLinkPress);
-    d.addEventListener('touchstart', potentialLinkPress);
+    d.addEventListener('touchstart', potentialLinkPress);*/
     w.addEventListener('load', () => ev('pageview', {
         width: w.innerWidth,
         headless: n.webdriver

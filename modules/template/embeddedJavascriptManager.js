@@ -60,25 +60,35 @@ module.exports = class EmbeddedJavascriptManager {
             const script = this.scriptCache.get(identifier);
             if(script.headers.cache == 'true' && typeof script.headers.__cachedData != 'undefined') return resolve(script.headers.__cachedData);
             const {func, matches} = script;
+            
+            const isBinary = script.headers['Content-Type'] == 'application/octet-stream';
 
             const $ = utils.deepAssign(function echo() {
-                for(let i = 0; i < arguments.length; ++i) {
-                    if($.echoOut[$.tag.currentId]) $.echoOut[$.tag.currentId] += String(arguments[i]);
-                    else $.echoOut[$.tag.currentId] = String(arguments[i]);
+                if(isBinary) $.echoOut = arguments[0];
+                else {
+                    for(let i = 0; i < arguments.length; ++i) {
+                        if($.echoOut[$.tag.currentId]) $.echoOut[$.tag.currentId] += String(arguments[i]);
+                        else $.echoOut[$.tag.currentId] = String(arguments[i]);
+                    }
                 }
             }, utils.deepAssign({inp}, globals));
             $.req = req;
 
             func($).then(() => {
                 let {data} = script;
-                let offset = 0;
-                for(let i = 0; i < matches.length; ++i) {
-                    const echoOutput = $.echoOut[i] || '';
-                    const {index, length} = matches[i];
-                    data = data.substring(0, index + offset) + echoOutput + data.substring(index + offset + length);
-                    offset += echoOutput.length - length;
-                };
-
+                if(isBinary) {
+                    if($.echoOut instanceof Buffer) data = $.echoOut;
+                    else data = Buffer.from('');
+                } else {
+                    let offset = 0;
+                    for(let i = 0; i < matches.length; ++i) {
+                        const echoOutput = $.echoOut[i] || '';
+                        const {index, length} = matches[i];
+                        data = data.substring(0, index + offset) + echoOutput + data.substring(index + offset + length);
+                        offset += echoOutput.length - length;
+                    };
+    
+                }
                 const out = {data, encoding: script.headers['Content-Type'] || 'text/html', code: $.responseCode}
 
                 if(script.headers.cache == 'true') {

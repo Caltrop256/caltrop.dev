@@ -5,13 +5,13 @@ const utils = require('../../utils.js');
 module.exports = class AnalyticsManager {
     static Entry = class AnalyticsEntry {
         $finished = false;
-        constructor(id, ip, domain, req) {
+        constructor(id, ip, domain, req, fullPath) {
             const DNT = ip == 'DNT';
             this.startTimestamp = Date.now();
             this.id = id;
             this.ip = ip;
             this.domain = domain;
-            this.location = req.url || null;
+            this.location = fullPath || null;
             this.userAgent = String(req.headers['user-agent']).substring(0, 256) || null;
             this.referer = req.headers.referrer || req.headers.referer || null;
             this.method = req.method;
@@ -66,9 +66,9 @@ module.exports = class AnalyticsManager {
         this.entries = new Map();
     }
 
-    addEntry(req, domain, ip) {
+    addEntry(req, domain, ip, fullPath) {
         const id = crypto.randomBytes(32).toString('base64');
-        this.entries.set(id, new AnalyticsManager.Entry(id, ip, domain, req));
+        this.entries.set(id, new AnalyticsManager.Entry(id, ip, domain, req, fullPath));
         if(ip == 'DNT') {
             this.freeEntry(id);
             return 'DNT';

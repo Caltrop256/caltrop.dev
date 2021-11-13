@@ -19,6 +19,8 @@ const defaultSettings = {
     redirect: {
         destination: null
     },
+
+    stopIteratingIfMatch: null,
     
     rewrite: {
         destinaton: null
@@ -96,7 +98,7 @@ module.exports = class Folder {
         return null;
     }
 
-    getDeep(filepath, ind = 0) {
+    getDeep(filepath, ind = 0, fullPath = '/') {
         if(this.settings.redirect.destination) {
             return {redirectTo: this.settings.redirect.destination, ind};
         }
@@ -104,25 +106,29 @@ module.exports = class Folder {
         if(typeof filepath == 'string') filepath = filepath.split(path.sep);
         const target = filepath.shift();
 
-        // get default file
-        if(!target) {
+        const handleDefault = () => {
             const defaultFile = this.getDefault();
             if(defaultFile) return {
                 folder: this,
                 file: defaultFile,
-                bRootDefault: true
+                bRootDefault: true,
+                fullPath
             }; else {
                 log(log.warn, 'Default File missing at: "', this.path, '"!');
                 return null; // specified default file doesn't exist
             }
         }
+        // get default file
+        if(!target) return handleDefault();
 
         // recursively check directory & files
-        if(this.sub.has(target)) return this.sub.get(target).getDeep(filepath, ind + 1);
+        if(this.sub.has(target)) return this.sub.get(target).getDeep(filepath, ind + 1, fullPath + target + '/');
+        else if(this.settings.stopIteratingIfMatch && new RegExp(this.settings.stopIteratingIfMatch).test(target)) return this.getDeep(filepath, ind, fullPath);
         else if(!filepath.length && this.files.has(target)) return {
             folder: this,
             file: this.files.get(target),
-            bRootDefault: false
+            bRootDefault: false,
+            fullPath: fullPath + target
         }; else {
             const checkForFile = !filepath.length;
             const matches = [];

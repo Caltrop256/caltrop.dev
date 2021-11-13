@@ -66,6 +66,13 @@ function request(req, res) {
 
         headers['Tk'] = doNotTrack ? 'N' : 'P';
 
+        const requestedDomain = req.headers.host.split(':')[0];
+        const domain = this.domains.has(requestedDomain) ? this.domains.get(requestedDomain) : this.domains.get(this.$defaultDomain);
+        const dest = path.normalize(path.resolve(domain.location, '.' + url.pathname));
+        const dirs = dest.split(path.sep).splice(this.sepSkip);
+        const decoded = dirs.map(decodeURIComponent);
+        const info = domain.access.getDeep(Array.from(decoded));
+
         let isHead = false;
         switch(req.method.toUpperCase()) {
             case 'HEAD' :
@@ -95,7 +102,7 @@ function request(req, res) {
                                 const scriptData = (await this.fileCache.get(file.path)).toString('utf8');
                                 if(!this.embeddedJS.register(file.path, scriptData)) return resp(500);
                             }
-                            const _id = (this.embeddedJS.scriptCache.get(file.path).headers.analytics == 'true') && this.analytics.addEntry(req, domain.name, ip);
+                            const _id = (this.embeddedJS.scriptCache.get(file.path).headers.analytics == 'true') && this.analytics.addEntry(req, domain.name, ip, info.fullPath);
     
                             this.embeddedJS.run(file.path, req, {analyticsID: _id || 'DNT'}).then(content => {
                                 headers['Content-Type'] = content.encoding;
@@ -108,7 +115,10 @@ function request(req, res) {
                                 res.writeHead(req.headers.range ? 206 : content.code, headers);
                                 if(!isHead) res.write(content.data);
                                 res.end();
-                            }).catch(() => resp(500));
+                            }).catch(err => {
+                                //log(log.error, err);
+                                resp(500)}
+                            );
                         } else {
                             headers['Content-Type'] = mime.lookup(file.extension) || 'application/octet-stream';
                             if(file.stat.size > this.fileCache.fileSizeLimit || req.headers.range) {
@@ -127,7 +137,7 @@ function request(req, res) {
                                 this.fileCache.get(file.path).then(buffer => {
                                     switch(file.extension) {    
                                         case '.html' :
-                                            const _id = this.analytics.addEntry(req, domain.name, ip);
+                                            const _id = this.analytics.addEntry(req, domain.name, ip, info.fullPath);
                                             buffer = buffer.replace('data-id="{{DATAID}}"', 'data-id="'+(_id)+'"');
                                         default :
                                             headers['Content-Length'] = Buffer.byteLength(buffer);
@@ -156,14 +166,6 @@ function request(req, res) {
                     if(!file) return resp(403);
                     return processAndSendData(file);
                 };
-
-                const requestedDomain = req.headers.host.split(':')[0];
-                const domain = this.domains.has(requestedDomain) ? this.domains.get(requestedDomain) : this.domains.get(this.$defaultDomain);
-                const dest = path.normalize(path.resolve(domain.location, '.' + url.pathname));
-                const dirs = dest.split(path.sep).splice(this.sepSkip);
-                const decoded = dirs.map(decodeURIComponent);
-                
-                const info = domain.access.getDeep(Array.from(decoded));
 
                 if(!info) return resp(404);
                 if(info.redirectTo) {
@@ -220,7 +222,10 @@ function request(req, res) {
                     const file = this.metaFiles.get(url.pathname);
                     if(!file || file.extension != '.emb') return resp(403);
                     postToEmb(file);
-                } else return resp(404);
+                } else {
+                    if(!info) return resp(404);
+                    postToEmb(info.file);
+                }
                 break;
                 
             case 'OPTIONS' :
