@@ -7,6 +7,9 @@ module.exports = {
     },
     responseCode: 200,
 
+
+    utils: require('../utils.js'),
+
     escape(unsafe) {
         return unsafe.replace(/[&<>"']/g, t => {switch(t) {
             case '&' : return '&amp;';

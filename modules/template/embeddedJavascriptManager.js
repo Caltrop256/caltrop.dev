@@ -46,7 +46,7 @@ module.exports = class EmbeddedJavascriptManager {
 
         try {
             const func = new (Object.getPrototypeOf(async function(){}).constructor)('$', code);
-            this.scriptCache.set(identifier, {func, matches, data: script, headers});
+            this.scriptCache.set(identifier, {func, matches, data: script, headers, static: {}});
             return true;
         } catch(err) {
             log(log.error, 'Failed to compile embedded script "', identifier, '"!: ', err);
@@ -73,6 +73,7 @@ module.exports = class EmbeddedJavascriptManager {
                 }
             }, utils.deepAssign({inp}, globals));
             $.req = req;
+            $.static = script.static;
 
             func($).then(() => {
                 let {data} = script;
