@@ -1,6 +1,6 @@
 <footer>
     <ul class="hlist">
-        <li><a href="/meta/copyleft/">Reproducing</a></li>
+        <li><a href="/meta/copyleft/">License</a></li>
         <li><a href="/meta/privacy/">Privacy Policy</a></li>
     </ul>
     <span>
