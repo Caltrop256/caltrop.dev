@@ -19,7 +19,7 @@ body {
     background-position: top left;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: 67% 100%;
     background-color: #000000;
 }
 
@@ -138,7 +138,7 @@ article h3 {
     display: block;
     font-weight: bold;
     line-height: 1.15;
-    margin-top: 4px;
+    margin-top: 8px;
     margin-bottom: 4px;
     margin-left: -8px;
 }
@@ -148,6 +148,7 @@ article h1 {
     font-size: 32px;
 }
 
+article h3 a,
 article h3 {
     color: #C6A5D6;
     font-size: 24px;
@@ -158,6 +159,8 @@ article span {
     font-size: 14px;
     font-weight: bold;
     color: #e2e2e2;
+    margin-bottom: 4px;
+    margin-top: 0px;
 }
 
 article input {
@@ -350,4 +353,8 @@ footer>span>svg {
     padding: 10px;
     border: 2px dotted #B55AB5;
     margin-left: 8px;
+}
+
+iframe {
+    border: none;
 }
