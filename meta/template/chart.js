@@ -189,16 +189,23 @@ function render() {
             }
     
             ctx.beginPath();
+            const isIncomplete = dataPairs[i][0] > new Date(Date.now() - 86400000).setHours(0, 0, 0, 0);
+            console.log(dataPairs[i][0], isIncomplete);
+            if(isIncomplete) ctx.setLineDash([5, 10]);
             if(i < gPoints.length - 1) {
                 ctx.moveTo(gPoints[i][0], gPoints[i][1]);
                 ctx.lineTo(gPoints[i+1][0], gPoints[i+1][1]);
             } else if(gPoints.length == 1) {
                 ctx.moveTo(left, gPoints[i][1])
                 ctx.lineTo(width, gPoints[i][1]);
-            } else break;
+            } else {
+                if(isIncomplete) ctx.setLineDash([]);
+                break
+            };
             ctx.closePath();
             ctx.strokeStyle = clr;
             ctx.stroke();
+            if(isIncomplete) ctx.setLineDash([]);
         }
     }
 }

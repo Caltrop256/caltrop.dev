@@ -1,6 +1,8 @@
 <?em
     const _requestedDomain = req.headers.host.split(':')[0];
     const _domain = global.server.domains.has(_requestedDomain) ? global.server.domains.get(_requestedDomain) : global.server.domains.get(global.server.$defaultDomain);
+
+    const formatDate = _d => _d.getFullYear() + '-' + (_d.getMonth() + 1).toString().padStart(2, '0') + '-' + _d.getDate().toString().padStart(2, '0');
 ?>
 
 <!DOCTYPE html>
@@ -31,15 +33,12 @@
 
                 <script defer src="/meta/chart.js"></script>
                 <div style="display: flex; justify-content: space-between;">
-                    <input id="from" type="date" value="2021-07-17">
-                    <input id="to" type="date" value="<?em
-                        const d = new Date(Date.now() + 86400000);
-                        $(d.getFullYear(), '-', (d.getMonth() + 1).toString().padStart(2, '0'), '-', d.getDate().toString().padStart(2, '0'));
-                    ?>">
+                    <input id="from" type="date" value="<?em $(formatDate(new Date(Date.now() - 86400000 * 30))) ?>">
+                    <input id="to" type="date" value="<?em $(formatDate(new Date(Date.now() + 86400000))) ?>">
                 </div>
 
                 <div class="summedValues" id="sumValues"></div>
-                <p>* lowest reliable estimate - DNT visitors do not count towards this value!</p>
+                <p style="margin-top: 20px">* lowest reliable estimate - DNT visitors do not count towards this value!</p>
 
                 <div class="aLists" id="aLists">
 

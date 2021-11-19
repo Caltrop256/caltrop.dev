@@ -25,7 +25,7 @@
 
     const formatDate = _d => _d.getFullYear() + '-' + (_d.getMonth() + 1).toString().padStart(2, '0') + '-' + _d.getDate().toString().padStart(2, '0');
     
-    const _from = getQuery('from', /\d{4,4}-\d{2,2}-\d{2,2}/) || '2021-07-17';
+    const _from = getQuery('from', /\d{4,4}-\d{2,2}-\d{2,2}/) || formatDate(new Date(Date.now() - 30 * 86400000)); //'2021-07-17';
     const _to = getQuery('to', /\d{4,4}-\d{2,2}-\d{2,2}/) || formatDate(new Date(Date.now() + 86400000));
     const _location = getQuery('path') || 'All';
     const _domain = getQuery('domain') || 'All';
@@ -155,7 +155,6 @@
         data.days[i][1].averageSessionLength = Math.round(data.days[i][1].averageSessionLength);
     }
 
-    //if(!data.days[data.days.length - 1][1].visitors) data.days[data.days.length - 1].pop();
-
+    while(!data.days[data.days.length - 1][1].visitors) data.days.pop();
     $(JSON.stringify(data));
 ?>
