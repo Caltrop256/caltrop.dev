@@ -54,7 +54,7 @@
         if(newTabClick || (e.type == 'auxclick' && e.which == 2)) {
             let link = e.target;
             while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) link = link.parentNode;
-            if(link && link.href) {
+            if(link && link.href && !link.href.toLowerCase().startsWith('blob:')) {
                 const isOutbound = link.host && link.host != l.host;
                 const willOpenInNewTab = !((!link.target || /^_(self|parent|top)$/i.test(link.target)) && (!(e.ctrlKey || e.metaKey || e.shiftKey) && newTabClick));
                 ev('link', {
@@ -70,9 +70,9 @@
         }
     };
 
-    /*d.addEventListener('click', potentialLinkPress);
+    d.addEventListener('click', potentialLinkPress);
     d.addEventListener('auxclick', potentialLinkPress);
-    d.addEventListener('touchstart', potentialLinkPress);*/
+    d.addEventListener('touchstart', potentialLinkPress);
     w.addEventListener('load', () => ev('pageview', {
         width: w.innerWidth,
         headless: n.webdriver
